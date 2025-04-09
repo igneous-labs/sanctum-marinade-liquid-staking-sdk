@@ -14,16 +14,6 @@ use borsh::{BorshDeserialize, BorshSerialize};
 pub struct DepositSolQuote {
     pub in_amount: u64,
     pub out_amount: u64,
-    /// In terms of newly minted LSTs
-    pub referral_fee: u64,
-    /// In terms of newly minted LSTs
-    pub manager_fee: u64,
-}
-
-impl DepositSolQuote {
-    pub fn total_fees(&self) -> u64 {
-        self.referral_fee + self.manager_fee
-    }
 }
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
@@ -43,18 +33,6 @@ pub struct DepositStakeQuote {
 
     /// Output tokens, after subtracting fees
     pub tokens_out: u64,
-
-    /// In terms of output tokens
-    pub manager_fee: u64,
-
-    /// In terms of output tokens
-    pub referral_fee: u64,
-}
-
-impl DepositStakeQuote {
-    pub fn total_fees(&self) -> u64 {
-        self.referral_fee + self.manager_fee
-    }
 }
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]

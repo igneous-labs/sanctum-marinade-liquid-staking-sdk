@@ -1,7 +1,10 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use sanctum_u64_ratio::{Floor, Ratio};
 
-use crate::{DepositSolQuote, Fee, FeeCents, LiqPool, StakeSystem, ValidatorSystem};
+use crate::{
+    DepositSolQuote, DepositStakeQuote, Fee, FeeCents, LiqPool, StakeAccountLamports, StakeSystem,
+    ValidatorSystem,
+};
 
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -118,24 +121,81 @@ impl State {
         let out_amount = if self.msol_supply == 0 {
             lamports
         } else {
-            let ratio = Floor(Ratio {
-                n: self.msol_supply,
-                d: self.total_virtual_staked_lamports(),
-            });
-
-            ratio.apply(lamports)?
+            self.lamports_to_pool_tokens(lamports)?
         };
 
         Some(DepositSolQuote {
             in_amount: lamports,
             out_amount,
-            referral_fee: 0,
-            manager_fee: 0,
         })
     }
 
     #[inline]
-    fn total_cooling_down(&self) -> u64 {
+    pub fn quote_deposit_stake(
+        &self,
+        stake_account_lamports: StakeAccountLamports,
+    ) -> Option<DepositStakeQuote> {
+        if stake_account_lamports.staked < self.stake_system.min_stake {
+            return None;
+        }
+
+        if self
+            .check_staking_cap(stake_account_lamports.staked)
+            .is_err()
+        {
+            return None;
+        }
+
+        let new_pool_tokens = self.lamports_to_pool_tokens(stake_account_lamports.total())?;
+        let new_pool_tokens_from_stake =
+            self.lamports_to_pool_tokens(stake_account_lamports.staked)?;
+
+        if new_pool_tokens_from_stake > new_pool_tokens {
+            return None;
+        }
+
+        Some(DepositStakeQuote {
+            stake_account_lamports_in: stake_account_lamports,
+            tokens_out: 0,
+        })
+    }
+}
+
+impl State {
+    #[inline]
+    pub const fn supply_over_lamports(&self) -> Floor<Ratio<u64, u64>> {
+        Floor(Ratio {
+            n: self.msol_supply,
+            d: self.total_virtual_staked_lamports(),
+        })
+    }
+
+    #[inline]
+    pub const fn lamports_to_pool_tokens(&self, lamports: u64) -> Option<u64> {
+        let ratio = self.supply_over_lamports();
+        if ratio.0.is_zero() {
+            return Some(lamports);
+        }
+        ratio.apply(lamports)
+    }
+
+    #[inline]
+    pub const fn check_staking_cap(&self, transferring_lamports: u64) -> Result<(), &str> {
+        let result_amount = self
+            .total_lamports_under_control()
+            .checked_add(transferring_lamports)
+            .expect("SOL overflow");
+
+        if result_amount > self.staking_sol_cap {
+            // TODO: Improve error message, but format! is out of scope
+            return Err("Staking cap reached");
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    const fn total_cooling_down(&self) -> u64 {
         self.stake_system
             .delayed_unstake_cooling_down
             .checked_add(self.emergency_cooling_down)
@@ -143,7 +203,7 @@ impl State {
     }
 
     #[inline]
-    fn total_lamports_under_control(&self) -> u64 {
+    const fn total_lamports_under_control(&self) -> u64 {
         self.validator_system
             .total_active_balance
             .checked_add(self.total_cooling_down())
@@ -153,7 +213,7 @@ impl State {
     }
 
     #[inline]
-    fn total_virtual_staked_lamports(&self) -> u64 {
+    const fn total_virtual_staked_lamports(&self) -> u64 {
         self.total_lamports_under_control()
             .saturating_sub(self.circulating_ticket_balance)
     }
