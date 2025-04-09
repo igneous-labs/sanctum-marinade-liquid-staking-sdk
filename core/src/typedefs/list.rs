@@ -15,3 +15,13 @@ pub struct List {
     pub _reserved1: [u8; 32],
     pub _reserved2: u32,
 }
+
+impl List {
+    pub const DEFAULT: Self = Self {
+        account: [0u8; 32],
+        item_size: 0,
+        count: 0,
+        _reserved1: [0u8; 32],
+        _reserved2: 0,
+    };
+}

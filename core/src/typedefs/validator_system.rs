@@ -20,3 +20,13 @@ pub struct ValidatorSystem {
     /// DEPRECATED, no longer used
     pub auto_add_validator_enabled: u8,
 }
+
+impl ValidatorSystem {
+    pub const DEFAULT: Self = Self {
+        validator_list: List::DEFAULT,
+        manager_authority: [0u8; 32],
+        total_validator_score: 0,
+        total_active_balance: 0,
+        auto_add_validator_enabled: 0,
+    };
+}

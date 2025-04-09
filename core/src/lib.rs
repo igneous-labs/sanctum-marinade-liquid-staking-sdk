@@ -12,11 +12,11 @@ mod internal_utils;
 // mod pda;
 mod state;
 mod typedefs;
-// mod utils;
+mod utils;
 
 pub use consts::*;
 // pub use instructions::*;
 // pub use pda::*;
 pub use state::*;
 pub use typedefs::*;
-// pub use utils::*;
+pub use utils::*;

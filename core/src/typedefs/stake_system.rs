@@ -28,3 +28,16 @@ pub struct StakeSystem {
     /// so we maximize user's rewards
     pub extra_stake_delta_runs: u32,
 }
+
+impl StakeSystem {
+    pub const DEFAULT: Self = Self {
+        stake_list: List::DEFAULT,
+        delayed_unstake_cooling_down: 0,
+        stake_deposit_bump_seed: 0,
+        stake_withdraw_bump_seed: 0,
+        slots_for_stake_delta: 0,
+        last_stake_delta_epoch: 0,
+        min_stake: 0,
+        extra_stake_delta_runs: 0,
+    };
+}

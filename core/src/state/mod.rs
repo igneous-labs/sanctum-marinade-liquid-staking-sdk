@@ -1,6 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use sanctum_u64_ratio::{Floor, Ratio};
 
-use crate::{Fee, FeeCents, LiqPool, StakeSystem, ValidatorSystem};
+use crate::{DepositSolQuote, Fee, FeeCents, LiqPool, StakeSystem, ValidatorSystem};
 
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -76,6 +77,86 @@ pub struct State {
     pub last_stake_move_epoch: u64, // epoch of the last stake move action
     pub stake_moved: u64,           // total amount of moved SOL during the epoch #stake_move_epoch
     pub max_stake_moved_per_epoch: Fee, // % of total_lamports_under_control
+}
+
+impl State {
+    pub const DEFAULT: Self = Self {
+        discriminator: [0; 8],
+        msol_mint: [0u8; 32],
+        admin_authority: [0u8; 32],
+        operational_sol_account: [0u8; 32],
+        treasury_msol_account: [0u8; 32],
+        reserve_bump_seed: 0,
+        msol_mint_authority_bump_seed: 0,
+        rent_exempt_for_token_acc: 0,
+        reward_fee: Fee::ZERO,
+        stake_system: StakeSystem::DEFAULT,
+        validator_system: ValidatorSystem::DEFAULT,
+        liq_pool: LiqPool::DEFAULT,
+        available_reserve_balance: 0,
+        msol_supply: 0,
+        msol_price: 0,
+        circulating_ticket_count: 0,
+        circulating_ticket_balance: 0,
+        lent_from_reserve: 0,
+        min_deposit: 0,
+        min_withdraw: 0,
+        staking_sol_cap: 0,
+        emergency_cooling_down: 0,
+        pause_authority: [0u8; 32],
+        paused: false,
+        delayed_unstake_fee: FeeCents::ZERO,
+        withdraw_stake_account_fee: FeeCents::ZERO,
+        withdraw_stake_account_enabled: false,
+        last_stake_move_epoch: 0,
+        stake_moved: 0,
+        max_stake_moved_per_epoch: Fee::ZERO,
+    };
+
+    #[inline]
+    pub fn quote_deposit_sol(&self, lamports: u64) -> Option<DepositSolQuote> {
+        let out_amount = if self.msol_supply == 0 {
+            lamports
+        } else {
+            let ratio = Floor(Ratio {
+                n: self.msol_supply,
+                d: self.total_virtual_staked_lamports(),
+            });
+
+            ratio.apply(lamports)?
+        };
+
+        Some(DepositSolQuote {
+            in_amount: lamports,
+            out_amount,
+            referral_fee: 0,
+            manager_fee: 0,
+        })
+    }
+
+    #[inline]
+    fn total_cooling_down(&self) -> u64 {
+        self.stake_system
+            .delayed_unstake_cooling_down
+            .checked_add(self.emergency_cooling_down)
+            .expect("Total cooling down overflow")
+    }
+
+    #[inline]
+    fn total_lamports_under_control(&self) -> u64 {
+        self.validator_system
+            .total_active_balance
+            .checked_add(self.total_cooling_down())
+            .expect("Stake balance overflow")
+            .checked_add(self.available_reserve_balance)
+            .expect("Total SOLs under control overflow")
+    }
+
+    #[inline]
+    fn total_virtual_staked_lamports(&self) -> u64 {
+        self.total_lamports_under_control()
+            .saturating_sub(self.circulating_ticket_balance)
+    }
 }
 
 impl State {
