@@ -158,7 +158,6 @@ impl State {
             stake_account_lamports_in: stake_account_lamports,
             // TODO: confirm it's _from_stake and not just total
             tokens_out: new_pool_tokens_from_stake,
-            // fee_amount: new_pool_tokens - new_pool_tokens_from_stake, Do we need fee_amount? stakedex-sdk seems to be setting it
         })
     }
 }
