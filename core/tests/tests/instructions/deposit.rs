@@ -137,5 +137,16 @@ fn deposit_fixture() {
         .find(|(pubkey, _)| pubkey == &transfer_from)
         .expect("transfer_from account should exist");
 
-    println!("transfer_from: {}", transfer_from_account.1.lamports);
+    assert_eq!(transfer_from_account.1.lamports, 999_999_000);
+
+    let mint_to_account = resulting_accounts
+        .iter()
+        .find(|(pubkey, _)| pubkey == &mint_to)
+        .expect("mint_to account should exist");
+
+    let msol_amount = u64::from_le_bytes(mint_to_account.1.data[64..72].try_into().unwrap());
+    assert!(
+        msol_amount > 1_000_000,
+        "msol_amount should be greater than 1_000_000"
+    );
 }
