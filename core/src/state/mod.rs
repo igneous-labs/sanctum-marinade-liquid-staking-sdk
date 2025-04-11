@@ -135,17 +135,6 @@ impl State {
         &self,
         stake_account_lamports: StakeAccountLamports,
     ) -> Option<DepositStakeQuote> {
-        if stake_account_lamports.staked < self.stake_system.min_stake {
-            return None;
-        }
-
-        if self
-            .check_staking_cap(stake_account_lamports.staked)
-            .is_err()
-        {
-            return None;
-        }
-
         let new_pool_tokens = self.lamports_to_pool_tokens(stake_account_lamports.total())?;
         let new_pool_tokens_from_stake =
             self.lamports_to_pool_tokens(stake_account_lamports.staked)?;
@@ -178,21 +167,6 @@ impl State {
             return Some(lamports);
         }
         ratio.apply(lamports)
-    }
-
-    #[inline]
-    pub const fn check_staking_cap(&self, transferring_lamports: u64) -> Result<(), &str> {
-        let result_amount = self
-            .total_lamports_under_control()
-            .checked_add(transferring_lamports)
-            .expect("SOL overflow");
-
-        if result_amount > self.staking_sol_cap {
-            // TODO: Improve error message, but format! is out of scope
-            return Err("Staking cap reached");
-        }
-
-        Ok(())
     }
 
     #[inline]

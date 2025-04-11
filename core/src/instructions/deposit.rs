@@ -1,6 +1,9 @@
 use generic_array_struct::generic_array_struct;
 
-use crate::{State, SYSTEM_PROGRAM, TOKEN_PROGRAM};
+use crate::{
+    State, LIQ_POOL_MSOL_LEG_AUTHORITY_PUBKEY, LIQ_POOL_SOL_LEG_PUBKEY, MSOL_MINT_AUTHORITY_PUBKEY,
+    RESERVE_PUBKEY, SYSTEM_PROGRAM, TOKEN_PROGRAM,
+};
 
 pub const INSTRUCTION_DISCRIM_DEPOSIT: [u8; 8] = [242, 35, 198, 137, 82, 225, 242, 182];
 
@@ -68,6 +71,11 @@ impl DepositIxKeysOwned {
     pub fn with_consts(self) -> Self {
         self.as_borrowed().with_consts().into_owned()
     }
+
+    #[inline]
+    pub fn with_mainnet_const_pdas(self) -> Self {
+        self.as_borrowed().with_mainnet_const_pdas().into_owned()
+    }
 }
 
 impl<'a> DepositIxKeys<'a> {
@@ -94,6 +102,14 @@ impl<'a> DepositIxKeys<'a> {
         // TODO: in spl-sdk, we don't do `const_with_token_program`, why??
         self.const_with_system_program(&SYSTEM_PROGRAM)
             .const_with_token_program(&TOKEN_PROGRAM)
+    }
+
+    #[inline]
+    pub fn with_mainnet_const_pdas(self) -> Self {
+        self.const_with_liq_pool_sol_leg_pda(&LIQ_POOL_SOL_LEG_PUBKEY)
+            .const_with_liq_pool_msol_leg_authority(&LIQ_POOL_MSOL_LEG_AUTHORITY_PUBKEY)
+            .const_with_reserve_pda(&RESERVE_PUBKEY)
+            .const_with_msol_mint_authority(&MSOL_MINT_AUTHORITY_PUBKEY)
     }
 }
 

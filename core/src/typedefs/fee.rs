@@ -18,7 +18,7 @@ impl Fee {
 
     #[inline]
     pub const fn apply(&self, amt: u64) -> Option<AftFee> {
-        type F = sanctum_fee_ratio::Fee<Floor<Ratio<u32, u64>>>;
+        type F = sanctum_fee_ratio::Fee<Floor<Ratio<u32, u16>>>;
 
         let f = match F::new(Ratio {
             n: self.basis_points,

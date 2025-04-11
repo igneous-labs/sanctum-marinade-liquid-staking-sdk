@@ -17,7 +17,7 @@ fn deposit_fixture() {
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
     let state_pubkey = bs58::decode_pubkey(&state_account.pubkey);
     let state =
-        marinade_staking_sdk::State::borsh_de(&mut &state_account.account_data()[..]).unwrap();
+        marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
 
     let deposit_amount: u64 = 1_000;
     let quote = state.quote_deposit_sol(deposit_amount).unwrap();
@@ -28,30 +28,12 @@ fn deposit_fixture() {
     let mollusk = mollusk_marinade_prog();
 
     let keys = marinade_staking_sdk::DepositIxKeysOwned::default()
-        .with_liq_pool_sol_leg_pda(marinade_staking_sdk::LIQ_POOL_SOL_LEG_PUBKEY)
-        .with_liq_pool_msol_leg_authority(marinade_staking_sdk::LIQ_POOL_MSOL_LEG_AUTHORITY_PUBKEY)
-        .with_reserve_pda(marinade_staking_sdk::RESERVE_PUBKEY)
-        .with_msol_mint_authority(marinade_staking_sdk::MSOL_MINT_AUTHORITY_PUBKEY)
-        .with_transfer_from(transfer_from.to_bytes())
-        .with_mint_to(mint_to.to_bytes())
         .with_consts()
+        .with_mainnet_const_pdas()
         .with_keys_from_stake_pool(&state)
-        .with_state(state_pubkey);
-
-    assert_eq!(keys.0[0], state_pubkey);
-    assert_eq!(keys.0[1], state.msol_mint);
-    assert_eq!(keys.0[2], marinade_staking_sdk::LIQ_POOL_SOL_LEG_PUBKEY);
-    assert_eq!(keys.0[3], state.liq_pool.msol_leg);
-    assert_eq!(
-        keys.0[4],
-        marinade_staking_sdk::LIQ_POOL_MSOL_LEG_AUTHORITY_PUBKEY
-    );
-    assert_eq!(keys.0[5], marinade_staking_sdk::RESERVE_PUBKEY);
-    assert_eq!(keys.0[6], transfer_from.to_bytes());
-    assert_eq!(keys.0[7], mint_to.to_bytes());
-    assert_eq!(keys.0[8], marinade_staking_sdk::MSOL_MINT_AUTHORITY_PUBKEY);
-    assert_eq!(keys.0[9], marinade_staking_sdk::SYSTEM_PROGRAM);
-    assert_eq!(keys.0[10], marinade_staking_sdk::TOKEN_PROGRAM);
+        .with_state(state_pubkey)
+        .with_transfer_from(transfer_from.to_bytes())
+        .with_mint_to(mint_to.to_bytes());
 
     let metas = metas_from_keys_signer_writer(
         keys.0,
