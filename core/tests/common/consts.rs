@@ -3,5 +3,3 @@ pub const BPF_LOADER_UPGRADEABLE_PROGRAM_ID: [u8; 32] =
 
 pub const MIN_1_SOL_DELEGATION_FEATURE_ID: [u8; 32] =
     const_crypto::bs58::decode_pubkey("9onWzzvCzNC2jfhxxeqRgs5q7nFAAKpCUvkj6T6GJK9i");
-
-pub const STAKE_ACC_RENT_EXEMPT_LAMPORTS: u64 = 2282880;

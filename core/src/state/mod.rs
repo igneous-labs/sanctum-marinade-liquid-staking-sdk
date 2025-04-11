@@ -8,6 +8,11 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "wasm",
+    derive(tsify_next::Tsify),
+    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
+)]
 pub struct State {
     discriminator: [u8; 8],
 
@@ -139,10 +144,15 @@ impl State {
             return None;
         }
 
-        if self
-            .check_staking_cap(stake_account_lamports.staked)
-            .is_err()
-        {
+        // > quoting answers the user question of "how much lst will i get if i deposited this amount of sol"
+        // > which is completely independent of the question "can i deposit sol into this stake pool"
+        //
+        // dont think we should check_staking_cap() here, but just doc the cases where the
+        // returned quote might be inapplicable like in sanctum-spl-stake-pool-sdk.
+        //
+        // Tho we can retain the check_staking_cap() method export so that users can easily verify
+        // that their quotes remain applicable.
+        if self.will_deposit_exceed_staking_cap(stake_account_lamports.staked) {
             return None;
         }
 
@@ -181,18 +191,11 @@ impl State {
     }
 
     #[inline]
-    pub const fn check_staking_cap(&self, transferring_lamports: u64) -> Result<(), &str> {
+    pub const fn will_deposit_exceed_staking_cap(&self, deposit_lamports: u64) -> bool {
         let result_amount = self
             .total_lamports_under_control()
-            .checked_add(transferring_lamports)
-            .expect("SOL overflow");
-
-        if result_amount > self.staking_sol_cap {
-            // TODO: Improve error message, but format! is out of scope
-            return Err("Staking cap reached");
-        }
-
-        Ok(())
+            .saturating_add(deposit_lamports);
+        result_amount > self.staking_sol_cap
     }
 
     #[inline]

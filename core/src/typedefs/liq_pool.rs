@@ -42,3 +42,10 @@ impl LiqPool {
         liquidity_sol_cap: 0,
     };
 }
+
+impl Default for LiqPool {
+    #[inline]
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}

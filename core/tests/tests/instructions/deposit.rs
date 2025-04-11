@@ -18,7 +18,7 @@ fn deposit_keys() {
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
     let state_pubkey = bs58::decode_pubkey(&state_account.pubkey);
     let state =
-        marinade_staking_sdk::State::borsh_de(&mut &state_account.account_data()[..]).unwrap();
+        marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
 
     let keys = marinade_staking_sdk::DepositIxKeysOwned::default()
         .with_consts()
@@ -35,7 +35,7 @@ fn deposit_fixture() {
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
     let state_pubkey = bs58::decode_pubkey(&state_account.pubkey);
     let state =
-        marinade_staking_sdk::State::borsh_de(&mut &state_account.account_data()[..]).unwrap();
+        marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
 
     let sol_leg_seeds = marinade_staking_sdk::liq_pool_sol_leg_seeds(&state_pubkey);
     let (liq_pool_sol_leg_pda, _bump) = Pubkey::find_program_address(
@@ -78,6 +78,12 @@ fn deposit_fixture() {
         .with_keys_from_stake_pool(&state)
         .with_state(state_pubkey);
 
+    // im guessing these asserts here wre more for internal debugging than anything?
+    // i think checking that the produced instruction works is basically
+    // a good enough test that the accounts in the array are in the correct order.
+    //
+    // Same comment goes for the `deposit_keys()` test fn. Do you see any further value
+    // in keeping the test fn?
     assert_eq!(keys.0[0], state_pubkey);
     assert_eq!(keys.0[1], state.msol_mint);
     assert_eq!(keys.0[2], liq_pool_sol_leg_pda.to_bytes());

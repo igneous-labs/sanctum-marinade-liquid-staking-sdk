@@ -92,8 +92,18 @@ impl<'a> DepositIxKeys<'a> {
     #[inline]
     pub const fn with_consts(self) -> Self {
         // TODO: in spl-sdk, we don't do `const_with_token_program`, why??
+        //
+        // it's because the SPL stake pool program allows using spl-token-2022 program,
+        // (even though nobody does this in practice)
+        // so it cannot assumed to be the constant `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`,
+        // but must be the one read from the stake pool account data.
         self.const_with_system_program(&SYSTEM_PROGRAM)
             .const_with_token_program(&TOKEN_PROGRAM)
+    }
+
+    #[inline]
+    pub fn with_mainnet_const_pdas(self) -> Self {
+        todo!()
     }
 }
 

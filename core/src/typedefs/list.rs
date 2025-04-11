@@ -12,8 +12,8 @@ pub struct List {
     pub item_size: u32,
     pub count: u32,
 
-    pub _reserved1: [u8; 32],
-    pub _reserved2: u32,
+    _reserved1: [u8; 32],
+    _reserved2: u32,
 }
 
 impl List {

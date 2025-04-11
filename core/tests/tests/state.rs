@@ -8,7 +8,7 @@ fn test_state_serde() {
     let account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
 
     let stake_pool =
-        marinade_staking_sdk::State::borsh_de(&mut &account.account_data()[..]).unwrap();
+        marinade_staking_sdk::State::borsh_de(account.account_data().as_slice()).unwrap();
 
     assert_eq!(stake_pool.msol_supply, 3597210656032211);
     assert_eq!(stake_pool.available_reserve_balance, 265139147340070);
