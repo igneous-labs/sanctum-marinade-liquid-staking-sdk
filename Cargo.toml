@@ -31,6 +31,14 @@ wasm-bindgen-test = "0.3"
 
 # solana crates (for dev)
 solana-pubkey = { version = "^2", default-features = false }
+solana-account = { version = "^2", default-features = false }
+solana-account-decoder-client-types = { version = "^2", default-features = false }
+solana-instruction = { version = "^2", default-features = false }
+mollusk-svm-programs-token = { version = "^0.1", default-features = false }
+mollusk-svm = { version = "^0.1", default-features = false }
 
 # workspace members
 sanctum-marinade-liquid-staking-core = { path = "core" }
+
+
+

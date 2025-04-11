@@ -2,7 +2,7 @@ use generic_array_struct::generic_array_struct;
 
 use crate::{State, SYSTEM_PROGRAM, TOKEN_PROGRAM};
 
-pub const INSTRUCTION_DISCRIM_DEPOSIT_SOL: [u8; 8] = [242, 35, 198, 137, 82, 225, 242, 182];
+pub const INSTRUCTION_DISCRIM_DEPOSIT: [u8; 8] = [242, 35, 198, 137, 82, 225, 242, 182];
 
 #[generic_array_struct(pub)]
 #[repr(transparent)]
@@ -13,7 +13,7 @@ pub const INSTRUCTION_DISCRIM_DEPOSIT_SOL: [u8; 8] = [242, 35, 198, 137, 82, 225
     derive(tsify_next::Tsify),
     tsify(into_wasm_abi, from_wasm_abi)
 )]
-pub struct DepositSolIxPrefixAccs<T> {
+pub struct DepositIxAccs<T> {
     pub state: T,
     pub msol_mint: T,
     pub liq_pool_sol_leg_pda: T,
@@ -27,12 +27,12 @@ pub struct DepositSolIxPrefixAccs<T> {
     pub token_program: T,
 }
 
-pub type DepositSolIxPrefixKeysOwned = DepositSolIxPrefixAccs<[u8; 32]>;
-pub type DepositSolIxPrefixKeys<'a> = DepositSolIxPrefixAccs<&'a [u8; 32]>;
-pub type DepositSolIxPrefixAccsFlag = DepositSolIxPrefixAccs<bool>;
+pub type DepositIxKeysOwned = DepositIxAccs<[u8; 32]>;
+pub type DepositIxKeys<'a> = DepositIxAccs<&'a [u8; 32]>;
+pub type DepositIxAccsFlag = DepositIxAccs<bool>;
 
-pub const DEPOSIT_SOL_IX_PREFIX_IS_WRITER: DepositSolIxPrefixAccsFlag =
-    DepositSolIxPrefixAccs([false; DEPOSIT_SOL_IX_PREFIX_ACCS_LEN])
+pub const DEPOSIT_IX_PREFIX_IS_WRITER: DepositIxAccsFlag =
+    DepositIxAccs([false; DEPOSIT_IX_ACCS_LEN])
         .const_with_state(true)
         .const_with_msol_mint(true)
         .const_with_liq_pool_sol_leg_pda(true)
@@ -41,20 +41,20 @@ pub const DEPOSIT_SOL_IX_PREFIX_IS_WRITER: DepositSolIxPrefixAccsFlag =
         .const_with_transfer_from(true)
         .const_with_mint_to(true);
 
-pub const DEPOSIT_SOL_IX_PREFIX_IS_SIGNER: DepositSolIxPrefixAccsFlag =
-    DepositSolIxPrefixAccs([false; DEPOSIT_SOL_IX_PREFIX_ACCS_LEN]).const_with_transfer_from(true);
+pub const DEPOSIT_IX_PREFIX_IS_SIGNER: DepositIxAccsFlag =
+    DepositIxAccs([false; DEPOSIT_IX_ACCS_LEN]).const_with_transfer_from(true);
 
-impl<T: Clone> DepositSolIxPrefixAccs<T> {
+impl<T: Clone> DepositIxAccs<T> {
     #[inline]
-    pub const fn new(arr: [T; DEPOSIT_SOL_IX_PREFIX_ACCS_LEN]) -> Self {
+    pub const fn new(arr: [T; DEPOSIT_IX_ACCS_LEN]) -> Self {
         Self(arr)
     }
 }
 
-impl DepositSolIxPrefixKeysOwned {
+impl DepositIxKeysOwned {
     #[inline]
-    pub fn as_borrowed(&self) -> DepositSolIxPrefixKeys<'_> {
-        DepositSolIxPrefixKeys::new(self.0.each_ref())
+    pub fn as_borrowed(&self) -> DepositIxKeys<'_> {
+        DepositIxKeys::new(self.0.each_ref())
     }
 
     #[inline]
@@ -70,10 +70,10 @@ impl DepositSolIxPrefixKeysOwned {
     }
 }
 
-impl<'a> DepositSolIxPrefixKeys<'a> {
+impl<'a> DepositIxKeys<'a> {
     #[inline]
-    pub fn into_owned(self) -> DepositSolIxPrefixKeysOwned {
-        DepositSolIxPrefixKeysOwned::new(self.0.map(|pk| *pk))
+    pub fn into_owned(self) -> DepositIxKeysOwned {
+        DepositIxKeysOwned::new(self.0.map(|pk| *pk))
     }
 
     #[inline]
@@ -100,14 +100,14 @@ impl<'a> DepositSolIxPrefixKeys<'a> {
 #[repr(transparent)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct DepositSolIxData([u8; 16]);
+pub struct DepositIxData([u8; 16]);
 
-impl DepositSolIxData {
+impl DepositIxData {
     #[inline]
     pub fn new(deposit_lamports: u64) -> Self {
         let mut buf = [0u8; 16];
 
-        buf[0..8].copy_from_slice(&INSTRUCTION_DISCRIM_DEPOSIT_SOL);
+        buf[0..8].copy_from_slice(&INSTRUCTION_DISCRIM_DEPOSIT);
         buf[8..16].copy_from_slice(&deposit_lamports.to_le_bytes());
 
         Self(buf)

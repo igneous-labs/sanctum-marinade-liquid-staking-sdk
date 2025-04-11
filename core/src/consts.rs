@@ -23,5 +23,9 @@ pub const TOKEN_PROGRAM: [u8; 32] =
 pub const ASSOCIATED_TOKEN_PROGRAM: [u8; 32] =
     bs58::decode_pubkey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 
+// TODO: Confirm if we want `liquid-staking` or `liquid-staking-referral`
 pub const MARINADE_STAKING_PROGRAM: [u8; 32] =
-    bs58::decode_pubkey("MR2LqxoSbw831bNy68utpu5n4YqBH3AzDmddkgk9LQv");
+    bs58::decode_pubkey("MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD");
+
+pub const MSOL_MINT_ADDR: [u8; 32] =
+    bs58::decode_pubkey("mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So");

@@ -1,3 +1,3 @@
-mod deposit_sol;
+mod deposit;
 
-pub use deposit_sol::*;
+pub use deposit::*;

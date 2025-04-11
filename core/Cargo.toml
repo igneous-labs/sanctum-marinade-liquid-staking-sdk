@@ -25,3 +25,10 @@ wasm-bindgen = { workspace = true, optional = true }
 [dev-dependencies]
 data-encoding = { workspace = true, features = ["alloc"] }
 serde_json = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+mollusk-svm = { workspace = true, features = ["all-builtins"] } # needed for stake program
+mollusk-svm-programs-token = { workspace = true, features = ["token"] }
+solana-account = { workspace = true }
+solana-account-decoder-client-types = { workspace = true }
+solana-instruction = { workspace = true, features = ["std"] }
+solana-pubkey = { workspace = true, features = ["curve25519"] }
