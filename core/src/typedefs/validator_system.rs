@@ -29,4 +29,21 @@ impl ValidatorSystem {
         total_active_balance: 0,
         auto_add_validator_enabled: 0,
     };
+
+    pub fn get_validator_record(
+        &self,
+        validator_list_data: &[u8],
+        index: u32,
+    ) -> Result<ValidatorRecord, borsh::io::Error> {
+        self.validator_list.get(validator_list_data, index)
+    }
+}
+
+#[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq, Default)]
+pub struct ValidatorRecord {
+    pub validator_account: [u8; 32],
+    pub active_balance: u64,
+    pub score: u32,
+    pub last_stake_delta_epoch: u64,
+    pub duplication_flag_bump_seed: u8,
 }

@@ -3,7 +3,7 @@ use mollusk_svm::{
     program::{create_keyed_account_for_builtin_program, keyed_account_for_system_program},
     result::InstructionResult,
 };
-use sanctum_marinade_liquid_staking_core::{self as marinade_staking_sdk, State};
+use sanctum_marinade_liquid_staking_core::{self as marinade_staking_sdk};
 use solana_instruction::Instruction;
 use solana_pubkey::Pubkey;
 
@@ -13,7 +13,7 @@ use crate::common::{
 };
 
 #[test]
-fn deposit_fixture() {
+fn deposit_ix() {
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
     let state_pubkey = bs58::decode_pubkey(&state_account.pubkey);
     let state =

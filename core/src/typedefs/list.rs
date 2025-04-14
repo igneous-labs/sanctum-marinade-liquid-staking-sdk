@@ -24,4 +24,28 @@ impl List {
         _reserved1: [0u8; 32],
         _reserved2: 0,
     };
+
+    #[inline]
+    pub fn item_size(&self) -> u32 {
+        self.item_size
+    }
+
+    #[inline]
+    pub fn len(&self) -> u32 {
+        self.count
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.count == 0
+    }
+
+    #[inline]
+    pub fn get<I: BorshDeserialize>(&self, data: &[u8], index: u32) -> Result<I, borsh::io::Error> {
+        // TODO: check index with self.count
+
+        let start = 8 + (index * self.item_size) as usize;
+
+        I::deserialize(&mut &data[start..(start + self.item_size as usize)])
+    }
 }

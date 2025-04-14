@@ -12,6 +12,7 @@ fn test_state_serde() {
 
     assert_eq!(stake_pool.msol_supply, 3597210656032211);
     assert_eq!(stake_pool.available_reserve_balance, 265139147340070);
+    assert_eq!(stake_pool.validator_system.validator_list.item_size, 61);
 
     assert_eq!(
         bs58::encode_pubkey(&stake_pool.pause_authority).str(),
@@ -36,5 +37,26 @@ fn test_state_serde() {
     assert_eq!(
         bs58::encode_pubkey(&stake_pool.treasury_msol_account).str(),
         "B1aLzaNMeFVAyQ6f3XbbUyKcH2YPHu2fqiEagmiF23VR"
+    );
+}
+
+#[test]
+fn test_validator_record_serde() {
+    let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
+    let validator_list_account = KeyedUiAccount::from_test_fixtures_file("marinade-validator_list");
+
+    let stake_pool =
+        marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
+
+    let validator_list_data = validator_list_account.account_data().to_vec();
+
+    let validator_record = stake_pool
+        .validator_system
+        .get_validator_record(&validator_list_data, 0)
+        .unwrap();
+
+    assert_eq!(
+        bs58::encode_pubkey(&validator_record.validator_account).str(),
+        "BLADE1qNA1uNjRgER6DtUFf7FU3c1TWLLdpPeEcKatZ2"
     );
 }

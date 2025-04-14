@@ -73,8 +73,10 @@ pub fn marinade_mainnet_accounts() -> impl Iterator<Item = (Pubkey, Account)> {
         [
             "marinade-state",
             "marinade-validator_list",
+            "marinade-stake_list",
             "marinade-msol_mint",
             "marinade-liq_pool_msol_leg",
+            "stake_account",
         ]
         .as_slice(),
     )
