@@ -33,7 +33,6 @@ fn deposit_stake_account_ix() {
 
     let stake_account = KeyedUiAccount::from_test_fixtures_file("stake_account");
 
-    // println!("stake_account: {:?}", stake_account.account_data());
     let stake_account_pubkey = bs58::decode_pubkey(&stake_account.pubkey);
     let stake_state =
         StakeStateV2::deserialize(&mut stake_account.account_data().as_slice()).unwrap();
