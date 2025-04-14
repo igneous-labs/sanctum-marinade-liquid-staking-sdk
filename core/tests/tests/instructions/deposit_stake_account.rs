@@ -49,8 +49,6 @@ fn deposit_stake_account_ix() {
         })
         .unwrap();
 
-    println!("quote: {:?}", quote);
-
     let mint_to = Pubkey::new_unique();
 
     let keys = marinade_staking_sdk::DepositStakeAccountIxKeysOwned::default()
