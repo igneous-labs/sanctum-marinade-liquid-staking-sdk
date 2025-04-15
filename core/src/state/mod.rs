@@ -3,8 +3,14 @@ use sanctum_u64_ratio::{Floor, Ratio};
 
 use crate::{
     DepositSolQuote, DepositStakeQuote, Fee, FeeCents, LiqPool, StakeAccountLamports, StakeSystem,
-    ValidatorSystem,
+    ValidatorRecord, ValidatorSystem,
 };
+
+pub mod list;
+
+pub use list::*;
+
+pub type ValidatorList<'a> = ListAccount<'a, ValidatorRecord>;
 
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

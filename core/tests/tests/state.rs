@@ -1,5 +1,6 @@
 use const_crypto::bs58;
 use sanctum_marinade_liquid_staking_core::{self as marinade_staking_sdk};
+use solana_pubkey::Pubkey;
 
 use crate::common::KeyedUiAccount;
 
@@ -12,6 +13,7 @@ fn test_state_serde() {
 
     assert_eq!(stake_pool.msol_supply, 3597210656032211);
     assert_eq!(stake_pool.available_reserve_balance, 265139147340070);
+    assert_eq!(stake_pool.validator_system.validator_list.item_size, 61);
 
     assert_eq!(
         bs58::encode_pubkey(&stake_pool.pause_authority).str(),
@@ -37,4 +39,82 @@ fn test_state_serde() {
         bs58::encode_pubkey(&stake_pool.treasury_msol_account).str(),
         "B1aLzaNMeFVAyQ6f3XbbUyKcH2YPHu2fqiEagmiF23VR"
     );
+}
+
+#[test]
+fn test_validator_list_serde() {
+    let validator_list_account = KeyedUiAccount::from_test_fixtures_file("marinade-validator_list");
+    let validator_list_data = validator_list_account.account_data();
+
+    let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
+
+    let stake_pool =
+        marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
+
+    let validator_list = marinade_staking_sdk::ValidatorList::try_from_acc_data(
+        &validator_list_data,
+        Some(stake_pool.validator_system.validator_list.len() as usize),
+    )
+    .unwrap();
+
+    assert_eq!(
+        validator_list.0.len(),
+        stake_pool.validator_system.validator_list.len() as usize
+    );
+
+    for (i, validator_record) in validator_list.0.iter().enumerate() {
+        match i {
+            17 => {
+                check_validator_record(
+                    validator_record,
+                    ExpectedValidatorRecord {
+                        score: 11285,
+                        validator_pubkey: "DPmsofVJ1UMRZADgwYAHotJnazMwohHzRHSoomL6Qcao",
+                    },
+                );
+            }
+            22 => {
+                check_validator_record(
+                    validator_record,
+                    ExpectedValidatorRecord {
+                        score: 0,
+                        validator_pubkey: "BH7asDZbKkTmT3UWiNfmMVRgQEEpXoVThGPmQfgWwDhg",
+                    },
+                );
+            }
+            23 => {
+                check_validator_record(
+                    validator_record,
+                    ExpectedValidatorRecord {
+                        score: 107450,
+                        validator_pubkey: "yrfQfUfsZechz1zqQyTRRz43czTZQidcrm4SNVWiDPi",
+                    },
+                );
+            }
+            44 => {
+                check_validator_record(
+                    validator_record,
+                    ExpectedValidatorRecord {
+                        score: 46468,
+                        validator_pubkey: "89jnaTMuq5aXUkmpLbykRNaU16i7Du6QywqqPeCPT1Dy",
+                    },
+                );
+            }
+            _ => {}
+        }
+    }
+}
+
+struct ExpectedValidatorRecord<'a> {
+    score: u32,
+    validator_pubkey: &'a str,
+}
+fn check_validator_record(
+    validator_record: &marinade_staking_sdk::ValidatorRecord,
+    expected: ExpectedValidatorRecord,
+) {
+    let validator_pubkey = Pubkey::new_from_array(*validator_record.validator_account());
+
+    assert_eq!(validator_pubkey.to_string(), expected.validator_pubkey);
+    assert_eq!(validator_record.score(), expected.score);
 }

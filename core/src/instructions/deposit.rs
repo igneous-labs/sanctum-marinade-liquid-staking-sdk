@@ -2,7 +2,7 @@ use generic_array_struct::generic_array_struct;
 
 use crate::{
     State, LIQ_POOL_MSOL_LEG_AUTHORITY_PUBKEY, LIQ_POOL_SOL_LEG_PUBKEY, MSOL_MINT_AUTHORITY_PUBKEY,
-    RESERVE_PUBKEY, SYSTEM_PROGRAM, TOKEN_PROGRAM,
+    RESERVE_PUBKEY, STATE_PUBKEY, SYSTEM_PROGRAM, TOKEN_PROGRAM,
 };
 
 pub const INSTRUCTION_DISCRIM_DEPOSIT: [u8; 8] = [242, 35, 198, 137, 82, 225, 242, 182];
@@ -73,8 +73,8 @@ impl DepositIxKeysOwned {
     }
 
     #[inline]
-    pub fn with_mainnet_const_pdas(self) -> Self {
-        self.as_borrowed().with_mainnet_const_pdas().into_owned()
+    pub fn with_mainnet_consts(self) -> Self {
+        self.as_borrowed().with_mainnet_consts().into_owned()
     }
 }
 
@@ -105,11 +105,12 @@ impl<'a> DepositIxKeys<'a> {
     }
 
     #[inline]
-    pub fn with_mainnet_const_pdas(self) -> Self {
+    pub fn with_mainnet_consts(self) -> Self {
         self.const_with_liq_pool_sol_leg_pda(&LIQ_POOL_SOL_LEG_PUBKEY)
             .const_with_liq_pool_msol_leg_authority(&LIQ_POOL_MSOL_LEG_AUTHORITY_PUBKEY)
             .const_with_reserve_pda(&RESERVE_PUBKEY)
             .const_with_msol_mint_authority(&MSOL_MINT_AUTHORITY_PUBKEY)
+            .const_with_state(&STATE_PUBKEY)
     }
 }
 

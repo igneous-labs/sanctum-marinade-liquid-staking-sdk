@@ -30,3 +30,42 @@ impl ValidatorSystem {
         auto_add_validator_enabled: 0,
     };
 }
+
+#[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq, Default)]
+#[repr(C)]
+pub struct ValidatorRecord {
+    validator_account: [u8; 32],
+    active_balance: [u8; 8],
+    score: [u8; 4],
+    last_stake_delta_epoch: [u8; 8],
+    duplication_flag_bump_seed: u8,
+
+    additional_record_space: [u8; 8],
+}
+
+impl ValidatorRecord {
+    #[inline]
+    pub fn validator_account(&self) -> &[u8; 32] {
+        &self.validator_account
+    }
+
+    #[inline]
+    pub fn active_balance(&self) -> u64 {
+        u64::from_le_bytes(self.active_balance)
+    }
+
+    #[inline]
+    pub fn score(&self) -> u32 {
+        u32::from_le_bytes(self.score)
+    }
+
+    #[inline]
+    pub fn last_stake_delta_epoch(&self) -> u64 {
+        u64::from_le_bytes(self.last_stake_delta_epoch)
+    }
+
+    #[inline]
+    pub fn duplication_flag_bump_seed(&self) -> u8 {
+        self.duplication_flag_bump_seed
+    }
+}

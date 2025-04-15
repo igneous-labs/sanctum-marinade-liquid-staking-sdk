@@ -32,3 +32,4 @@ solana-account = { workspace = true }
 solana-account-decoder-client-types = { workspace = true }
 solana-instruction = { workspace = true, features = ["std"] }
 solana-pubkey = { workspace = true, features = ["curve25519"] }
+solana-sdk = { workspace = true, features = ["borsh"] }

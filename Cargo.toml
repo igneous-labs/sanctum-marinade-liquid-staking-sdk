@@ -30,6 +30,7 @@ wasm-bindgen = "^0.2"
 wasm-bindgen-test = "0.3"
 
 # solana crates (for dev)
+solana-sdk = { version = "^2", default-features = false }
 solana-pubkey = { version = "^2", default-features = false }
 solana-account = { version = "^2", default-features = false }
 solana-account-decoder-client-types = { version = "^2", default-features = false }
