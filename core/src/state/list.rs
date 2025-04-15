@@ -2,27 +2,6 @@
 ///
 /// Type T must have an alignment of 1 (typically ensured by using #[repr(C)] and
 /// containing only types that are byte arrays or have alignment 1)
-///
-/// # Example
-///
-/// ```rust
-/// use crate::{ListAccount, assert_alignment_is_one};
-///
-/// #[repr(C)]
-/// struct MyRecord {
-///     data: [u8; 32],
-///     value: [u8; 8],
-/// }
-///
-/// // Verify at compile time that MyRecord has alignment 1
-/// assert_alignment_is_one!(MyRecord);
-///
-/// // Later use it with ListAccount
-/// fn process_my_records(account_data: &[u8]) -> Option<Vec<MyRecord>> {
-///     let list = ListAccount::<MyRecord>::try_from_acc_data(account_data)?;
-///     Some(list.as_slice().to_vec())
-/// }
-/// ```
 pub struct ListAccount<'a, T>(pub &'a [T]);
 
 impl<'a, T> ListAccount<'a, T> {

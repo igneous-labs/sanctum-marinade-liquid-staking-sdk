@@ -53,7 +53,7 @@ fn test_validator_list_serde() {
 
     let validator_list = marinade_staking_sdk::ValidatorList::try_from_acc_data(
         &validator_list_data,
-        Some(stake_pool.validator_system.validator_list.item_size as usize),
+        Some(stake_pool.validator_system.validator_list.len() as usize),
     )
     .unwrap();
 
