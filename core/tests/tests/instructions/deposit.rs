@@ -1,4 +1,3 @@
-use const_crypto::bs58;
 use mollusk_svm::{
     program::{create_keyed_account_for_builtin_program, keyed_account_for_system_program},
     result::InstructionResult,
@@ -15,7 +14,6 @@ use crate::common::{
 #[test]
 fn deposit_ix() {
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
-    let state_pubkey = bs58::decode_pubkey(&state_account.pubkey);
     let state =
         marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
 
@@ -29,9 +27,8 @@ fn deposit_ix() {
 
     let keys = marinade_staking_sdk::DepositIxKeysOwned::default()
         .with_consts()
-        .with_mainnet_const_pdas()
+        .with_mainnet_consts()
         .with_keys_from_stake_pool(&state)
-        .with_state(state_pubkey)
         .with_transfer_from(transfer_from.to_bytes())
         .with_mint_to(mint_to.to_bytes());
 

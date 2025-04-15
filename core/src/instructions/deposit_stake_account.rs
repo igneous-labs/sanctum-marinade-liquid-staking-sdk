@@ -1,8 +1,8 @@
 use generic_array_struct::generic_array_struct;
 
 use crate::{
-    State, MSOL_MINT_AUTHORITY_PUBKEY, STAKE_PROGRAM, SYSTEM_PROGRAM, SYSVAR_CLOCK, SYSVAR_RENT,
-    TOKEN_PROGRAM,
+    State, MSOL_MINT_AUTHORITY_PUBKEY, STAKE_PROGRAM, STATE_PUBKEY, SYSTEM_PROGRAM, SYSVAR_CLOCK,
+    SYSVAR_RENT, TOKEN_PROGRAM,
 };
 
 pub const INSTRUCTION_DISCRIM_DEPOSIT_STAKE_ACCOUNT: [u8; 8] = [110, 130, 115, 41, 164, 102, 2, 59];
@@ -80,8 +80,8 @@ impl DepositStakeAccountIxKeysOwned {
     }
 
     #[inline]
-    pub fn with_mainnet_const_pdas(self) -> Self {
-        self.as_borrowed().with_mainnet_const_pdas().into_owned()
+    pub fn with_mainnet_consts(self) -> Self {
+        self.as_borrowed().with_mainnet_consts().into_owned()
     }
 }
 
@@ -116,8 +116,9 @@ impl<'a> DepositStakeAccountIxKeys<'a> {
     }
 
     #[inline]
-    pub fn with_mainnet_const_pdas(self) -> Self {
+    pub fn with_mainnet_consts(self) -> Self {
         self.const_with_msol_mint_authority(&MSOL_MINT_AUTHORITY_PUBKEY)
+            .const_with_state(&STATE_PUBKEY)
     }
 }
 

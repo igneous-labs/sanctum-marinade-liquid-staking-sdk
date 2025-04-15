@@ -20,7 +20,6 @@ use crate::common::{
 #[test]
 fn deposit_stake_account_ix() {
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
-    let state_pubkey = bs58::decode_pubkey(&state_account.pubkey);
     let state =
         marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
 
@@ -53,9 +52,8 @@ fn deposit_stake_account_ix() {
 
     let keys = marinade_staking_sdk::DepositStakeAccountIxKeysOwned::default()
         .with_consts()
-        .with_mainnet_const_pdas()
+        .with_mainnet_consts()
         .with_keys_from_stake_pool(&state)
-        .with_state(state_pubkey)
         .with_stake_account(stake_account_pubkey)
         .with_stake_authority(staker_pubkey)
         .with_duplication_flag(duplication_flag_pubkey.to_bytes())
