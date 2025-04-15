@@ -46,8 +46,21 @@ fn test_validator_list_serde() {
     let validator_list_account = KeyedUiAccount::from_test_fixtures_file("marinade-validator_list");
     let validator_list_data = validator_list_account.account_data();
 
-    let validator_list =
-        marinade_staking_sdk::ValidatorList::try_from_acc_data(&validator_list_data).unwrap();
+    let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
+
+    let stake_pool =
+        marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
+
+    let validator_list = marinade_staking_sdk::ValidatorList::try_from_acc_data(
+        &validator_list_data,
+        Some(stake_pool.validator_system.validator_list.item_size as usize),
+    )
+    .unwrap();
+
+    assert_eq!(
+        validator_list.0.len(),
+        stake_pool.validator_system.validator_list.len() as usize
+    );
 
     for (i, validator_record) in validator_list.0.iter().enumerate() {
         match i {

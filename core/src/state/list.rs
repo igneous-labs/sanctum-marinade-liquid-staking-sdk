@@ -38,7 +38,7 @@ impl<'a, T> ListAccount<'a, T> {
     /// The type T should:
     /// - Have alignment requirement of 1 (use #[repr(C)] and only byte array members)
     /// - Be suitable for reading from raw memory (typically Copy and 'static)
-    pub fn try_from_acc_data(data: &'a [u8]) -> Option<Self> {
+    pub fn try_from_acc_data(data: &'a [u8], max_len: Option<usize>) -> Option<Self> {
         // Skip the 8-byte discriminator
         if data.len() <= 8 {
             return None;
@@ -72,12 +72,22 @@ impl<'a, T> ListAccount<'a, T> {
         // Calculate count
         let count = remaining.len() / record_size;
 
+        // Apply max_len limit if specified
+        let count = match max_len {
+            Some(max) if max < count => max,
+            _ => count,
+        };
+
+        // Calculate the actual bytes to use based on count
+        let bytes_to_use = count * record_size;
+        let data_to_use = &remaining[..bytes_to_use];
+
         // SAFETY:
         // - We've verified that T has alignment of 1
         // - We've verified the slice contains a whole number of T elements
         // - We're treating the data as a read-only slice
         // - The lifetime of the resulting slice is tied to the input data lifetime
-        let items = unsafe { core::slice::from_raw_parts(remaining.as_ptr() as *const T, count) };
+        let items = unsafe { core::slice::from_raw_parts(data_to_use.as_ptr() as *const T, count) };
 
         Some(Self(items))
     }
