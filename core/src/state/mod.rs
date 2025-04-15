@@ -1,4 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use list::ListAccount;
 use sanctum_u64_ratio::{Floor, Ratio};
 
 use crate::{
@@ -7,8 +8,6 @@ use crate::{
 };
 
 pub mod list;
-
-pub use list::*;
 
 pub type ValidatorList<'a> = ListAccount<'a, ValidatorRecord>;
 pub type StakeList<'a> = ListAccount<'a, StakeRecord>;

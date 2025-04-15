@@ -105,11 +105,7 @@ fn test_stake_list_serde() {
         KeyedUiAccount::from_test_fixtures_file("marinade-stake_list");
     let stake_list_data = stake_list_account.account_data();
 
-    let stake_list =
-        marinade_staking_sdk::ListAccount::<marinade_staking_sdk::StakeRecord>::try_from_acc_data(
-            &stake_list_data,
-        )
-        .unwrap();
+    let stake_list = marinade_staking_sdk::StakeList::try_from_acc_data(&stake_list_data).unwrap();
 
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
 
