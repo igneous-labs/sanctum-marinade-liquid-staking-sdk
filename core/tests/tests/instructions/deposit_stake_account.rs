@@ -14,7 +14,7 @@ use solana_sdk::stake::state::StakeStateV2;
 
 use crate::common::{
     marinade_mainnet_accounts, metas_from_keys_signer_writer, mollusk_marinade_prog,
-    msol_token_acc, payer_account, KeyedUiAccount,
+    msol_token_acc, payer_account, token_acc_balance, KeyedUiAccount,
 };
 
 #[test]
@@ -113,6 +113,6 @@ fn deposit_stake_account_ix() {
         .find(|(pubkey, _)| pubkey == &mint_to)
         .expect("mint_to account should exist");
 
-    let msol_amount = u64::from_le_bytes(mint_to_account.1.data[64..72].try_into().unwrap());
+    let msol_amount = token_acc_balance(&mint_to_account.1);
     assert_eq!(msol_amount, 1_000_000 + quote.tokens_out);
 }

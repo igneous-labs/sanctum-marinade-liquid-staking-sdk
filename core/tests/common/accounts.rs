@@ -59,6 +59,10 @@ pub fn msol_token_acc(amt: u64, owner: Pubkey) -> Account {
     }
 }
 
+pub fn token_acc_balance(account: &Account) -> u64 {
+    u64::from_le_bytes(account.data[64..72].try_into().unwrap())
+}
+
 fn test_fixtures_accounts<'a>(
     fnames: &'a [&'a str],
 ) -> impl Iterator<Item = (Pubkey, Account)> + 'a {
