@@ -13,8 +13,8 @@ fn test_state_serde() {
     let stake_pool =
         marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
 
-    assert_eq!(stake_pool.msol_supply, 3597210656032211);
-    assert_eq!(stake_pool.available_reserve_balance, 265139147340070);
+    assert_eq!(stake_pool.msol_supply, 3564176058141121);
+    assert_eq!(stake_pool.available_reserve_balance, 260659593335447);
     assert_eq!(stake_pool.validator_system.validator_list.item_size, 61);
 
     println!(
@@ -53,8 +53,21 @@ fn test_validator_list_serde() {
     let validator_list_account = KeyedUiAccount::from_test_fixtures_file("marinade-validator_list");
     let validator_list_data = validator_list_account.account_data();
 
-    let validator_list =
-        marinade_staking_sdk::ValidatorList::try_from_acc_data(&validator_list_data).unwrap();
+    let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
+
+    let stake_pool =
+        marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
+
+    let validator_list = marinade_staking_sdk::ValidatorList::try_from_acc_data(
+        &validator_list_data,
+        Some(stake_pool.validator_system.validator_list.len() as usize),
+    )
+    .unwrap();
+
+    assert_eq!(
+        validator_list.0.len(),
+        stake_pool.validator_system.validator_list.len() as usize
+    );
 
     for (i, validator_record) in validator_list.0.iter().enumerate() {
         match i {
@@ -62,7 +75,7 @@ fn test_validator_list_serde() {
                 check_validator_record(
                     validator_record,
                     ExpectedValidatorRecord {
-                        score: 11285,
+                        score: 7692,
                         validator_pubkey: "DPmsofVJ1UMRZADgwYAHotJnazMwohHzRHSoomL6Qcao",
                     },
                 );
@@ -80,7 +93,7 @@ fn test_validator_list_serde() {
                 check_validator_record(
                     validator_record,
                     ExpectedValidatorRecord {
-                        score: 107450,
+                        score: 83295,
                         validator_pubkey: "yrfQfUfsZechz1zqQyTRRz43czTZQidcrm4SNVWiDPi",
                     },
                 );
@@ -89,7 +102,7 @@ fn test_validator_list_serde() {
                 check_validator_record(
                     validator_record,
                     ExpectedValidatorRecord {
-                        score: 46468,
+                        score: 0,
                         validator_pubkey: "89jnaTMuq5aXUkmpLbykRNaU16i7Du6QywqqPeCPT1Dy",
                     },
                 );
@@ -101,31 +114,30 @@ fn test_validator_list_serde() {
 
 #[test]
 fn test_stake_list_serde() {
-    let stake_list_account: KeyedUiAccount =
-        KeyedUiAccount::from_test_fixtures_file("marinade-stake_list");
-    let stake_list_data = stake_list_account.account_data();
-
-    let stake_list = marinade_staking_sdk::StakeList::try_from_acc_data(&stake_list_data).unwrap();
-
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
 
     let stake_pool =
         marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
 
-    println!(
-        "item_size: {:?}",
-        bs58::encode_pubkey(&stake_pool.stake_system.stake_list.account).str()
+    let stake_list_account: KeyedUiAccount =
+        KeyedUiAccount::from_test_fixtures_file("marinade-stake_list");
+    let stake_list_data = stake_list_account.account_data();
+
+    let stake_list = marinade_staking_sdk::StakeList::try_from_acc_data(
+        &stake_list_data,
+        Some(stake_pool.stake_system.stake_list.len() as usize),
+    )
+    .unwrap();
+
+    assert_eq!(
+        stake_list.0.len(),
+        stake_pool.stake_system.stake_list.len() as usize
     );
 
-    let mut stake_account_count = 0;
-
     for stake_record in stake_list.0.iter() {
-        if stake_record.stake_account() != &EMPTY_PUBKEY {
-            stake_account_count += 1;
-        }
+        assert_ne!(stake_record.stake_account(), &EMPTY_PUBKEY);
+        assert!(stake_record.last_update_epoch() > 0)
     }
-
-    assert!(stake_account_count > 0);
 }
 
 struct ExpectedValidatorRecord<'a> {

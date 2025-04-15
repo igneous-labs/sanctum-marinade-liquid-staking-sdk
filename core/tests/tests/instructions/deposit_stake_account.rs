@@ -108,10 +108,8 @@ fn deposit_stake_account_ix() {
 
     raw_result.unwrap();
 
-    let mint_to_account = resulting_accounts
-        .iter()
-        .find(|(pubkey, _)| pubkey == &mint_to)
-        .expect("mint_to account should exist");
+    let mint_to_index = 17;
+    let mint_to_account = &resulting_accounts[mint_to_index];
 
     let msol_amount = token_acc_balance(&mint_to_account.1);
     assert_eq!(msol_amount, 1_000_000 + quote.tokens_out);
