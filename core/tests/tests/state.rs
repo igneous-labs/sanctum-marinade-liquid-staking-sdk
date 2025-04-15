@@ -4,6 +4,8 @@ use solana_pubkey::Pubkey;
 
 use crate::common::KeyedUiAccount;
 
+const EMPTY_PUBKEY: [u8; 32] = [0; 32];
+
 #[test]
 fn test_state_serde() {
     let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
@@ -14,6 +16,11 @@ fn test_state_serde() {
     assert_eq!(stake_pool.msol_supply, 3597210656032211);
     assert_eq!(stake_pool.available_reserve_balance, 265139147340070);
     assert_eq!(stake_pool.validator_system.validator_list.item_size, 61);
+
+    println!(
+        "stake_item_size: {:?}",
+        stake_pool.stake_system.stake_list.item_size
+    );
 
     assert_eq!(
         bs58::encode_pubkey(&stake_pool.pause_authority).str(),
@@ -90,6 +97,39 @@ fn test_validator_list_serde_() {
             _ => {}
         }
     }
+}
+
+#[test]
+fn test_stake_list_serde() {
+    let stake_list_account: KeyedUiAccount =
+        KeyedUiAccount::from_test_fixtures_file("marinade-stake_list");
+    let stake_list_data = stake_list_account.account_data();
+
+    let stake_list =
+        marinade_staking_sdk::ListAccount::<marinade_staking_sdk::StakeRecord>::try_from_acc_data(
+            &stake_list_data,
+        )
+        .unwrap();
+
+    let state_account = KeyedUiAccount::from_test_fixtures_file("marinade-state");
+
+    let stake_pool =
+        marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
+
+    println!(
+        "item_size: {:?}",
+        bs58::encode_pubkey(&stake_pool.stake_system.stake_list.account).str()
+    );
+
+    let mut stake_account_count = 0;
+
+    for stake_record in stake_list.0.iter() {
+        if stake_record.stake_account() != &EMPTY_PUBKEY {
+            stake_account_count += 1;
+        }
+    }
+
+    assert!(stake_account_count > 0);
 }
 
 struct ExpectedValidatorRecord<'a> {
