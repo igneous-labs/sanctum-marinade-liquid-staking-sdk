@@ -1,7 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::assert_alignment_is_one;
-
 use super::List;
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
@@ -44,8 +42,6 @@ pub struct ValidatorRecord {
 
     additional_record_space: [u8; 8],
 }
-
-assert_alignment_is_one!(ValidatorRecord);
 
 impl ValidatorRecord {
     #[inline]

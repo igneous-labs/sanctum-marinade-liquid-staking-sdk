@@ -42,12 +42,12 @@ fn test_state_serde() {
 }
 
 #[test]
-fn test_validator_list_serde_() {
+fn test_validator_list_serde() {
     let validator_list_account = KeyedUiAccount::from_test_fixtures_file("marinade-validator_list");
     let validator_list_data = validator_list_account.account_data();
 
     let validator_list =
-        marinade_staking_sdk::ListAccount::<marinade_staking_sdk::ValidatorRecord>::try_from_acc_data(&validator_list_data).unwrap();
+        marinade_staking_sdk::ValidatorList::try_from_acc_data(&validator_list_data).unwrap();
 
     for (i, validator_record) in validator_list.0.iter().enumerate() {
         match i {
