@@ -12,7 +12,9 @@ use borsh::{BorshDeserialize, BorshSerialize};
     tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
 )]
 pub struct DepositSolQuote {
+    /// Input SOL amount in lamports
     pub in_amount: u64,
+    /// Output mSOL amount in lamports (Marinade does not charge fees on deposits)
     pub out_amount: u64,
 }
 
@@ -28,10 +30,10 @@ pub struct DepositSolQuote {
     tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
 )]
 pub struct DepositStakeQuote {
-    /// Staked and unstaked lamports, before subtracting fees
+    /// Staked and unstaked lamports in the stake account
     pub stake_account_lamports_in: StakeAccountLamports,
 
-    /// Output tokens, after subtracting fees
+    /// Output mSOL tokens (Marinade does not charge fees on deposits)
     pub tokens_out: u64,
 }
 
