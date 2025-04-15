@@ -1,5 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
+use crate::assert_alignment_is_one;
+
 use super::List;
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
@@ -29,21 +31,45 @@ impl ValidatorSystem {
         total_active_balance: 0,
         auto_add_validator_enabled: 0,
     };
-
-    pub fn get_validator_record(
-        &self,
-        validator_list_data: &[u8],
-        index: u32,
-    ) -> Result<ValidatorRecord, borsh::io::Error> {
-        self.validator_list.get(validator_list_data, index)
-    }
 }
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq, Default)]
+#[repr(C)]
 pub struct ValidatorRecord {
-    pub validator_account: [u8; 32],
-    pub active_balance: u64,
-    pub score: u32,
-    pub last_stake_delta_epoch: u64,
-    pub duplication_flag_bump_seed: u8,
+    validator_account: [u8; 32],
+    active_balance: [u8; 8],
+    score: [u8; 4],
+    last_stake_delta_epoch: [u8; 8],
+    duplication_flag_bump_seed: u8,
+
+    additional_record_space: [u8; 8],
+}
+
+assert_alignment_is_one!(ValidatorRecord);
+
+impl ValidatorRecord {
+    #[inline]
+    pub fn validator_account(&self) -> &[u8; 32] {
+        &self.validator_account
+    }
+
+    #[inline]
+    pub fn active_balance(&self) -> u64 {
+        u64::from_le_bytes(self.active_balance)
+    }
+
+    #[inline]
+    pub fn score(&self) -> u32 {
+        u32::from_le_bytes(self.score)
+    }
+
+    #[inline]
+    pub fn last_stake_delta_epoch(&self) -> u64 {
+        u64::from_le_bytes(self.last_stake_delta_epoch)
+    }
+
+    #[inline]
+    pub fn duplication_flag_bump_seed(&self) -> u8 {
+        self.duplication_flag_bump_seed
+    }
 }

@@ -39,13 +39,4 @@ impl List {
     pub fn is_empty(&self) -> bool {
         self.count == 0
     }
-
-    #[inline]
-    pub fn get<I: BorshDeserialize>(&self, data: &[u8], index: u32) -> Result<I, borsh::io::Error> {
-        // TODO: check index with self.count
-
-        let start = 8 + (index * self.item_size) as usize;
-
-        I::deserialize(&mut &data[start..(start + self.item_size as usize)])
-    }
 }

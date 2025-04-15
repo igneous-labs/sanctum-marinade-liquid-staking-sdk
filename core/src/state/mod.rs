@@ -6,6 +6,10 @@ use crate::{
     ValidatorSystem,
 };
 
+pub mod list;
+
+pub use list::*;
+
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct State {
