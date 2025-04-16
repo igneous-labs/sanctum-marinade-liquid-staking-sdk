@@ -6,11 +6,6 @@ use borsh::{BorshDeserialize, BorshSerialize};
     derive(serde::Serialize, serde::Deserialize),
     serde(rename_all = "camelCase")
 )]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
-)]
 pub struct DepositSolQuote {
     /// Input SOL amount in lamports
     pub in_amount: u64,
@@ -23,11 +18,6 @@ pub struct DepositSolQuote {
     feature = "serde",
     derive(serde::Serialize, serde::Deserialize),
     serde(rename_all = "camelCase")
-)]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
 )]
 pub struct DepositStakeQuote {
     /// Staked and unstaked lamports in the stake account
@@ -42,11 +32,6 @@ pub struct DepositStakeQuote {
     feature = "serde",
     derive(serde::Serialize, serde::Deserialize),
     serde(rename_all = "camelCase")
-)]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
 )]
 pub struct StakeAccountLamports {
     pub staked: u64,
@@ -64,11 +49,6 @@ impl StakeAccountLamports {
     feature = "serde",
     derive(serde::Serialize, serde::Deserialize),
     serde(rename_all = "camelCase")
-)]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
 )]
 pub struct WithdrawStakeQuote {
     pub tokens_in: u64,

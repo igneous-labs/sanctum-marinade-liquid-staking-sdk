@@ -4,11 +4,6 @@ use super::List;
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
-)]
 pub struct StakeSystem {
     pub stake_list: List,
     pub delayed_unstake_cooling_down: u64,

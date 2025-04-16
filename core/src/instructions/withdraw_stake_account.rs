@@ -13,11 +13,6 @@ pub const INSTRUCTION_DISCRIM_WITHDRAW_STAKE_ACCOUNT: [u8; 8] =
 #[repr(transparent)]
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi)
-)]
 pub struct WithdrawStakeAccountIxAccs<T> {
     pub state: T,
     pub msol_mint: T,

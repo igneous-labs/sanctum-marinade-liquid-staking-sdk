@@ -4,11 +4,6 @@ use crate::Fee;
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
-)]
 pub struct LiqPool {
     pub lp_mint: [u8; 32],
     pub lp_mint_authority_bump_seep: u8,
