@@ -165,7 +165,7 @@ impl State {
 
         Some(WithdrawStakeQuote {
             tokens_in: pool_tokens,
-            lamports_staked: lamports,
+            lamports_staked: lamports.saturating_sub(withdraw_fee_lamports.fee()),
             fee_amount: withdraw_fee_lamports.fee(),
         })
     }

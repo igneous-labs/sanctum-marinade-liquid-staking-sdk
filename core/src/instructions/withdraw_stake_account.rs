@@ -57,6 +57,7 @@ pub const WITHDRAW_STAKE_ACCOUNT_IX_PREFIX_IS_WRITER: WithdrawStakeAccountIxAccs
 pub const WITHDRAW_STAKE_ACCOUNT_IX_PREFIX_IS_SIGNER: WithdrawStakeAccountIxAccsFlag =
     WithdrawStakeAccountIxAccs([false; WITHDRAW_STAKE_ACCOUNT_IX_ACCS_LEN])
         .const_with_burn_msol_authority(true)
+        .const_with_split_stake_account(true)
         .const_with_split_stake_rent_payer(true);
 
 impl<T: Clone> WithdrawStakeAccountIxAccs<T> {
