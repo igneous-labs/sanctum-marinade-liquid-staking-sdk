@@ -134,8 +134,10 @@ impl<'a> WithdrawStakeAccountIxKeys<'a> {
 
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-// #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))] // TODO: figure this out
-pub struct WithdrawStakeAccountIxData([u8; 56]);
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct WithdrawStakeAccountIxData(
+    #[cfg_attr(feature = "serde", serde(with = "serde_bytes"))] [u8; 56],
+);
 
 impl WithdrawStakeAccountIxData {
     #[inline]
