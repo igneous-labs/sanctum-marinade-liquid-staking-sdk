@@ -60,7 +60,7 @@ fn test_validator_list_serde() {
 
     let validator_list = marinade_staking_sdk::ValidatorList::try_from_acc_data(
         &validator_list_data,
-        Some(stake_pool.validator_system.validator_list.len() as usize),
+        stake_pool.validator_system.validator_list.len() as usize,
     )
     .unwrap();
 
@@ -125,7 +125,7 @@ fn test_stake_list_serde() {
 
     let stake_list = marinade_staking_sdk::StakeList::try_from_acc_data(
         &stake_list_data,
-        Some(stake_pool.stake_system.stake_list.len() as usize),
+        stake_pool.stake_system.stake_list.len() as usize,
     )
     .unwrap();
 
