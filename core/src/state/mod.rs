@@ -158,15 +158,21 @@ impl State {
 
     #[inline]
     pub fn quote_withdraw_stake(&self, pool_tokens: u64) -> Option<WithdrawStakeQuote> {
-        let lamports = self.pool_tokens_to_lamports(pool_tokens)?;
+        let total_lamports = self.pool_tokens_to_lamports(pool_tokens)?;
 
         // https://github.com/marinade-finance/liquid-staking-program/blob/main/programs/marinade-finance/src/instructions/user/withdraw_stake_account.rs#L176
-        let withdraw_fee_lamports = self.withdraw_stake_account_fee.apply(lamports)?;
+        let withdraw_stake_account_fee_lamports =
+            self.withdraw_stake_account_fee.apply(total_lamports)?;
+
+        let split_lamports =
+            total_lamports.saturating_sub(withdraw_stake_account_fee_lamports.fee());
+
+        let msol_fees = pool_tokens.saturating_sub(self.lamports_to_pool_tokens(split_lamports)?);
 
         Some(WithdrawStakeQuote {
             tokens_in: pool_tokens,
-            lamports_staked: lamports.saturating_sub(withdraw_fee_lamports.fee()),
-            fee_amount: withdraw_fee_lamports.fee(),
+            lamports_staked: split_lamports,
+            fee_amount: msol_fees,
         })
     }
 }

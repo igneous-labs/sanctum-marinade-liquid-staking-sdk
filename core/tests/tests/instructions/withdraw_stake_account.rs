@@ -34,6 +34,14 @@ fn withdraw_stake_account_ix() {
     let stake_account = KeyedUiAccount::from_test_fixtures_file("withdraw_stake_account");
     let stake_account_pubkey = bs58::decode_pubkey(&stake_account.pubkey);
 
+    let treasury_msol_account =
+        KeyedUiAccount::from_test_fixtures_file("marinade-treasury_msol_account");
+    let before_treasury_msol_balance = u64::from_le_bytes(
+        treasury_msol_account.account_data()[64..72]
+            .try_into()
+            .unwrap(),
+    );
+
     let keys = marinade_staking_sdk::WithdrawStakeAccountIxKeysOwned::default()
         .with_consts()
         .with_mainnet_consts()
@@ -89,11 +97,13 @@ fn withdraw_stake_account_ix() {
 
     raw_result.unwrap();
 
+    let treasury_msol_account_index = 4;
     let burn_msol_from_index = 21;
     let split_stake_account_index = 22;
 
     let burn_msol_from_account = &resulting_accounts[burn_msol_from_index];
     let split_stake_account = &resulting_accounts[split_stake_account_index];
+    let treasury_msol_account = &resulting_accounts[treasury_msol_account_index];
 
     assert_eq!(
         token_acc_balance(&burn_msol_from_account.1),
@@ -107,4 +117,7 @@ fn withdraw_stake_account_ix() {
         split_stake.delegation().unwrap().stake,
         quote.lamports_staked
     );
+
+    let fee_amount = token_acc_balance(&treasury_msol_account.1) - before_treasury_msol_balance;
+    assert_eq!(fee_amount, quote.fee_amount);
 }
