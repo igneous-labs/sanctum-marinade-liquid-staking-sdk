@@ -18,6 +18,17 @@ impl<'a, T> ListAccount<'a, T> {
     /// - Have alignment requirement of 1 (use #[repr(C)] and only byte array members)
     /// - Be suitable for reading from raw memory (typically Copy and 'static)
     pub fn try_from_acc_data(data: &'a [u8], max_len: Option<usize>) -> Option<Self> {
+        const {
+            assert!(
+                core::mem::align_of::<T>() == 1,
+                "Type T must have alignment 1 for ListAccount"
+            );
+            assert!(
+                core::mem::size_of::<T>() > 0,
+                "Type T must have non-zero size for ListAccount"
+            );
+        }
+
         // Skip the 8-byte discriminator
         if data.len() <= 8 {
             return None;
@@ -25,18 +36,8 @@ impl<'a, T> ListAccount<'a, T> {
 
         let remaining = &data[8..];
 
-        // Size of T
+        // Get the size of type T
         let record_size = core::mem::size_of::<T>();
-
-        // Make sure record_size is non-zero
-        if record_size == 0 {
-            return None;
-        }
-
-        // Verify that T has alignment 1, which is required for the unsafe operation below
-        if core::mem::align_of::<T>() != 1 {
-            return None;
-        }
 
         // Ensure data is not empty
         if remaining.len() < record_size {
@@ -75,15 +76,4 @@ impl<'a, T> ListAccount<'a, T> {
     pub fn as_slice(&self) -> &'a [T] {
         self.0
     }
-}
-
-// Add a compile-time assertion that T has alignment 1 when it's known at compile time
-#[macro_export]
-macro_rules! assert_alignment_is_one {
-    ($type:ty) => {
-        const _: () = assert!(
-            core::mem::align_of::<$type>() == 1,
-            concat!("Type ", stringify!($type), " must have alignment 1")
-        );
-    };
 }

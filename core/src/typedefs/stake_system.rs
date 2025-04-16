@@ -1,7 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::assert_alignment_is_one;
-
 use super::List;
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
@@ -54,8 +52,6 @@ pub struct StakeRecord {
 
     additional_record_space: [u8; 7],
 }
-
-assert_alignment_is_one!(StakeRecord);
 
 impl StakeRecord {
     #[inline]
