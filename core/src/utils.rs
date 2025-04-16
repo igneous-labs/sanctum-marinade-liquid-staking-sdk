@@ -73,7 +73,7 @@ impl StakeAccountLamports {
 pub struct WithdrawStakeQuote {
     pub tokens_in: u64,
     pub lamports_staked: u64,
-    /// fee is levied in pool tokens and transferred to the
+    /// fee is levied in mSOL and transferred to the
     /// pool's manager fee destination
     pub fee_amount: u64,
 }

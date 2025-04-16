@@ -164,8 +164,7 @@ impl State {
         let withdraw_stake_account_fee_lamports =
             self.withdraw_stake_account_fee.apply(total_lamports)?;
 
-        let split_lamports =
-            total_lamports.saturating_sub(withdraw_stake_account_fee_lamports.fee());
+        let split_lamports = withdraw_stake_account_fee_lamports.rem();
 
         let msol_fees = pool_tokens.saturating_sub(self.lamports_to_pool_tokens(split_lamports)?);
 
