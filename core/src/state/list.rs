@@ -52,7 +52,7 @@ impl<'a, T> ListAccount<'a, T> {
         // - We've verified the data contains at least 'count' T elements
         // - We're treating the data as a read-only slice
         // - The lifetime of the resulting slice is tied to the input data lifetime
-        let items = unsafe { core::slice::from_raw_parts(remaining.as_ptr() as *const T, count) };
+        let items = unsafe { core::slice::from_raw_parts(remaining.as_ptr().cast(), count) };
 
         Some(Self(items))
     }

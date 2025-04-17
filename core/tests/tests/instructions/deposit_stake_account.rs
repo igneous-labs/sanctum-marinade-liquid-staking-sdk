@@ -86,7 +86,6 @@ fn deposit_stake_account_ix() {
             mollusk.sysvars.keyed_account_for_clock_sysvar(),
             mollusk.sysvars.keyed_account_for_rent_sysvar(),
             mollusk_svm_programs_token::token::keyed_account(),
-            mollusk.sysvars.keyed_account_for_clock_sysvar(),
             (staker, payer_account(1_000_000_000)),
             (mint_to, msol_token_acc(1_000_000, staker)),
             (

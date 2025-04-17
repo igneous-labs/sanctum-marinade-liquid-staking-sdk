@@ -82,7 +82,6 @@ fn withdraw_stake_account_ix() {
             ),
             mollusk.sysvars.keyed_account_for_clock_sysvar(),
             mollusk_svm_programs_token::token::keyed_account(),
-            mollusk.sysvars.keyed_account_for_clock_sysvar(),
             (user, payer_account(5_000_000_000_000)),
             (burn_msol_from, msol_token_acc(5_000_000_000, user)),
             (split_stake_account, Account::default()),
