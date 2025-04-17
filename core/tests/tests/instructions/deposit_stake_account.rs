@@ -107,7 +107,7 @@ fn deposit_stake_account_ix() {
 
     raw_result.unwrap();
 
-    let mint_to_index = 22;
+    let mint_to_index = 21;
     let mint_to_account = &resulting_accounts[mint_to_index];
 
     let msol_amount = token_acc_balance(&mint_to_account.1);

@@ -97,8 +97,8 @@ fn withdraw_stake_account_ix() {
     raw_result.unwrap();
 
     let treasury_msol_account_index = 4;
-    let burn_msol_from_index = 21;
-    let split_stake_account_index = 22;
+    let burn_msol_from_index = 20;
+    let split_stake_account_index = 21;
 
     let burn_msol_from_account = &resulting_accounts[burn_msol_from_index];
     let split_stake_account = &resulting_accounts[split_stake_account_index];
