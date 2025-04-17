@@ -11,11 +11,6 @@ pub const INSTRUCTION_DISCRIM_DEPOSIT: [u8; 8] = [242, 35, 198, 137, 82, 225, 24
 #[repr(transparent)]
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi)
-)]
 pub struct DepositIxAccs<T> {
     pub state: T,
     pub msol_mint: T,

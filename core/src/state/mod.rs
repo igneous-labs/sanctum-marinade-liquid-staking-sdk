@@ -1,16 +1,16 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use list::ListAccount;
 use sanctum_u64_ratio::{Floor, Ratio};
 
 use crate::{
-    DepositSolQuote, DepositStakeQuote, Fee, FeeCents, LiqPool, StakeAccountLamports, StakeSystem,
-    ValidatorRecord, ValidatorSystem,
+    DepositSolQuote, DepositStakeQuote, Fee, FeeCents, LiqPool, StakeAccountLamports, StakeRecord,
+    StakeSystem, ValidatorRecord, ValidatorSystem, WithdrawStakeQuote,
 };
 
 pub mod list;
 
-pub use list::*;
-
 pub type ValidatorList<'a> = ListAccount<'a, ValidatorRecord>;
+pub type StakeList<'a> = ListAccount<'a, StakeRecord>;
 
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -155,6 +155,25 @@ impl State {
             tokens_out: new_pool_tokens_from_stake,
         })
     }
+
+    #[inline]
+    pub fn quote_withdraw_stake(&self, pool_tokens: u64) -> Option<WithdrawStakeQuote> {
+        let total_lamports = self.pool_tokens_to_lamports(pool_tokens)?;
+
+        // https://github.com/marinade-finance/liquid-staking-program/blob/main/programs/marinade-finance/src/instructions/user/withdraw_stake_account.rs#L176
+        let withdraw_stake_account_fee_lamports =
+            self.withdraw_stake_account_fee.apply(total_lamports)?;
+
+        let split_lamports = withdraw_stake_account_fee_lamports.rem();
+
+        let msol_fees = pool_tokens.saturating_sub(self.lamports_to_pool_tokens(split_lamports)?);
+
+        Some(WithdrawStakeQuote {
+            tokens_in: pool_tokens,
+            lamports_staked: split_lamports,
+            fee_amount: msol_fees,
+        })
+    }
 }
 
 impl State {
@@ -167,12 +186,29 @@ impl State {
     }
 
     #[inline]
+    pub const fn lamports_over_supply(&self) -> Floor<Ratio<u64, u64>> {
+        Floor(Ratio {
+            n: self.total_virtual_staked_lamports(),
+            d: self.msol_supply,
+        })
+    }
+
+    #[inline]
     pub const fn lamports_to_pool_tokens(&self, lamports: u64) -> Option<u64> {
         let ratio = self.supply_over_lamports();
         if ratio.0.is_zero() {
             return Some(lamports);
         }
         ratio.apply(lamports)
+    }
+
+    #[inline]
+    pub const fn pool_tokens_to_lamports(&self, pool_tokens: u64) -> Option<u64> {
+        let ratio = self.lamports_over_supply();
+        if ratio.0.is_zero() {
+            return Some(pool_tokens);
+        }
+        ratio.apply(pool_tokens)
     }
 
     #[inline]

@@ -11,11 +11,7 @@ pub const INSTRUCTION_DISCRIM_DEPOSIT_STAKE_ACCOUNT: [u8; 8] = [110, 130, 115, 4
 #[repr(transparent)]
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi)
-)]
+
 pub struct DepositStakeAccountIxAccs<T> {
     pub state: T,
     pub validator_list: T,

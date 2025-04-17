@@ -2,7 +2,8 @@ use const_crypto::{bs58, ed25519::derive_program_address};
 
 use crate::{
     liq_pool_msol_leg_authority_seeds, liq_pool_sol_leg_seeds, msol_mint_authority_seeds,
-    reserve_seeds, MARINADE_STAKING_PROGRAM,
+    reserve_seeds, stake_deposit_authority_seeds, stake_withdraw_authority_seeds,
+    MARINADE_STAKING_PROGRAM,
 };
 
 pub const STATE_PUBKEY: [u8; 32] =
@@ -10,6 +11,9 @@ pub const STATE_PUBKEY: [u8; 32] =
 
 pub const VALIDATOR_LIST_PUBKEY: [u8; 32] =
     bs58::decode_pubkey("DwFYJNnhLmw19FBTrVaLWZ8SZJpxdPoSYVSJaio9tjbY");
+
+pub const STAKE_LIST_PUBKEY: [u8; 32] =
+    bs58::decode_pubkey("Anv3XE7e5saNdm16MU6bniYS59Mpv7DzQXHAhxJUmAKW");
 
 pub const LIQ_POOL_MSOL_LEG_PUBKEY: [u8; 32] =
     bs58::decode_pubkey("7GgPYjS5Dza89wV6FpZ23kUJRG5vbQ1GM25ezspYFSoE");
@@ -53,3 +57,29 @@ const MSOL_MINT_AUTHORITY_PDA_TUP: ([u8; 32], u8) = derive_program_address(
 );
 pub const MSOL_MINT_AUTHORITY_PUBKEY: [u8; 32] = MSOL_MINT_AUTHORITY_PDA_TUP.0;
 pub const MSOL_MINT_AUTHORITY_BUMP: u8 = MSOL_MINT_AUTHORITY_PDA_TUP.1;
+
+// --------- Stake Withdraw Authority PDA ---------
+const STAKE_WITHDRAW_AUTHORITY_SEEDS: (&[u8; 32], &[u8; 8]) =
+    stake_withdraw_authority_seeds(&STATE_PUBKEY);
+const STAKE_WITHDRAW_AUTHORITY_PDA_TUP: ([u8; 32], u8) = derive_program_address(
+    &[
+        STAKE_WITHDRAW_AUTHORITY_SEEDS.0,
+        STAKE_WITHDRAW_AUTHORITY_SEEDS.1,
+    ],
+    &MARINADE_STAKING_PROGRAM,
+);
+pub const STAKE_WITHDRAW_AUTHORITY_PUBKEY: [u8; 32] = STAKE_WITHDRAW_AUTHORITY_PDA_TUP.0;
+pub const STAKE_WITHDRAW_AUTHORITY_BUMP: u8 = STAKE_WITHDRAW_AUTHORITY_PDA_TUP.1;
+
+// --------- Stake Deposit Authority PDA ---------
+const STAKE_DEPOSIT_AUTHORITY_SEEDS: (&[u8; 32], &[u8; 7]) =
+    stake_deposit_authority_seeds(&STATE_PUBKEY);
+const STAKE_DEPOSIT_AUTHORITY_PDA_TUP: ([u8; 32], u8) = derive_program_address(
+    &[
+        STAKE_DEPOSIT_AUTHORITY_SEEDS.0,
+        STAKE_DEPOSIT_AUTHORITY_SEEDS.1,
+    ],
+    &MARINADE_STAKING_PROGRAM,
+);
+pub const STAKE_DEPOSIT_AUTHORITY_PUBKEY: [u8; 32] = STAKE_DEPOSIT_AUTHORITY_PDA_TUP.0;
+pub const STAKE_DEPOSIT_AUTHORITY_BUMP: u8 = STAKE_DEPOSIT_AUTHORITY_PDA_TUP.1;

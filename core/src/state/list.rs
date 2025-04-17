@@ -8,7 +8,7 @@ impl<'a, T> ListAccount<'a, T> {
     /// Tries to interpret the account data as a list of items of type T
     ///
     /// - Skips the 8-byte discriminator prefix
-    /// - Verifies that the remaining data is a multiple of the size of T
+    /// - Verifies that the remaining data has enough bytes for the requested count
     /// - Returns None if the data doesn't match the expected structure
     ///
     /// # Safety
@@ -17,7 +17,18 @@ impl<'a, T> ListAccount<'a, T> {
     /// The type T should:
     /// - Have alignment requirement of 1 (use #[repr(C)] and only byte array members)
     /// - Be suitable for reading from raw memory (typically Copy and 'static)
-    pub fn try_from_acc_data(data: &'a [u8], max_len: Option<usize>) -> Option<Self> {
+    pub fn try_from_acc_data(data: &'a [u8], count: usize) -> Option<Self> {
+        const {
+            assert!(
+                core::mem::align_of::<T>() == 1,
+                "Type T must have alignment 1 for ListAccount"
+            );
+            assert!(
+                core::mem::size_of::<T>() > 0,
+                "Type T must have non-zero size for ListAccount"
+            );
+        }
+
         // Skip the 8-byte discriminator
         if data.len() <= 8 {
             return None;
@@ -25,48 +36,23 @@ impl<'a, T> ListAccount<'a, T> {
 
         let remaining = &data[8..];
 
-        // Size of T
+        // Get the size of type T
         let record_size = core::mem::size_of::<T>();
 
-        // Make sure record_size is non-zero
-        if record_size == 0 {
+        // Calculate bytes needed for the requested count
+        let bytes_needed = count * record_size;
+
+        // Ensure we have enough data for the requested count
+        if remaining.len() < bytes_needed {
             return None;
         }
-
-        // Verify that T has alignment 1, which is required for the unsafe operation below
-        if core::mem::align_of::<T>() != 1 {
-            return None;
-        }
-
-        // Ensure data is not empty
-        if remaining.len() < record_size {
-            return None;
-        }
-
-        // Ensure data length is divisible by the size of T
-        if remaining.len() % record_size != 0 {
-            return None;
-        }
-
-        // Calculate count
-        let count = remaining.len() / record_size;
-
-        // Apply max_len limit if specified
-        let count = match max_len {
-            Some(max) if max < count => max,
-            _ => count,
-        };
-
-        // Calculate the actual bytes to use based on count
-        let bytes_to_use = count * record_size;
-        let data_to_use = &remaining[..bytes_to_use];
 
         // SAFETY:
         // - We've verified that T has alignment of 1
-        // - We've verified the slice contains a whole number of T elements
+        // - We've verified the data contains at least 'count' T elements
         // - We're treating the data as a read-only slice
         // - The lifetime of the resulting slice is tied to the input data lifetime
-        let items = unsafe { core::slice::from_raw_parts(data_to_use.as_ptr() as *const T, count) };
+        let items = unsafe { core::slice::from_raw_parts(remaining.as_ptr().cast(), count) };
 
         Some(Self(items))
     }
@@ -75,15 +61,4 @@ impl<'a, T> ListAccount<'a, T> {
     pub fn as_slice(&self) -> &'a [T] {
         self.0
     }
-}
-
-// Add a compile-time assertion that T has alignment 1 when it's known at compile time
-#[macro_export]
-macro_rules! assert_alignment_is_one {
-    ($type:ty) => {
-        const _: () = assert!(
-            core::mem::align_of::<$type>() == 1,
-            concat!("Type ", stringify!($type), " must have alignment 1")
-        );
-    };
 }

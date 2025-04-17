@@ -2,7 +2,8 @@ use std::{fs::File, path::Path};
 
 use sanctum_marinade_liquid_staking_core::{
     LIQ_POOL_MSOL_LEG_AUTHORITY_PUBKEY, LIQ_POOL_SOL_LEG_PUBKEY, MSOL_MINT_ADDR,
-    MSOL_MINT_AUTHORITY_PUBKEY, RESERVE_PUBKEY, SYSTEM_PROGRAM, TOKEN_PROGRAM,
+    MSOL_MINT_AUTHORITY_PUBKEY, RESERVE_PUBKEY, STAKE_DEPOSIT_AUTHORITY_PUBKEY,
+    STAKE_WITHDRAW_AUTHORITY_PUBKEY, SYSTEM_PROGRAM, TOKEN_PROGRAM,
 };
 use serde::{Deserialize, Serialize};
 use solana_account::Account;
@@ -79,8 +80,11 @@ pub fn marinade_mainnet_accounts() -> impl Iterator<Item = (Pubkey, Account)> {
             "marinade-validator_list",
             "marinade-stake_list",
             "marinade-msol_mint",
+            "marinade-treasury_msol_account",
             "marinade-liq_pool_msol_leg",
             "stake_account",
+            "withdraw_stake_account",
+            "vote_account_589",
         ]
         .as_slice(),
     )
@@ -99,6 +103,14 @@ pub fn marinade_mainnet_accounts() -> impl Iterator<Item = (Pubkey, Account)> {
         ),
         (
             Pubkey::new_from_array(MSOL_MINT_AUTHORITY_PUBKEY),
+            Account::default(),
+        ),
+        (
+            Pubkey::new_from_array(STAKE_WITHDRAW_AUTHORITY_PUBKEY),
+            Account::default(),
+        ),
+        (
+            Pubkey::new_from_array(STAKE_DEPOSIT_AUTHORITY_PUBKEY),
             Account::default(),
         ),
     ])

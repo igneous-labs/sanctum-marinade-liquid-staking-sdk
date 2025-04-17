@@ -4,11 +4,6 @@ use super::List;
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(
-    feature = "wasm",
-    derive(tsify_next::Tsify),
-    tsify(into_wasm_abi, from_wasm_abi, large_number_types_as_bigints)
-)]
 pub struct StakeSystem {
     pub stake_list: List,
     pub delayed_unstake_cooling_down: u64,
@@ -40,4 +35,37 @@ impl StakeSystem {
         min_stake: 0,
         extra_stake_delta_runs: 0,
     };
+}
+
+#[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq, Default)]
+#[repr(C)]
+pub struct StakeRecord {
+    stake_account: [u8; 32],
+    last_update_delegated_lamports: [u8; 8],
+    last_update_epoch: [u8; 8],
+    is_emergency_unstaking: u8,
+
+    additional_record_space: [u8; 7],
+}
+
+impl StakeRecord {
+    #[inline]
+    pub fn stake_account(&self) -> &[u8; 32] {
+        &self.stake_account
+    }
+
+    #[inline]
+    pub fn last_update_delegated_lamports(&self) -> u64 {
+        u64::from_le_bytes(self.last_update_delegated_lamports)
+    }
+
+    #[inline]
+    pub fn last_update_epoch(&self) -> u64 {
+        u64::from_le_bytes(self.last_update_epoch)
+    }
+
+    #[inline]
+    pub fn is_emergency_unstaking(&self) -> bool {
+        self.is_emergency_unstaking == 1
+    }
 }
