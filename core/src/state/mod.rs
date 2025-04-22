@@ -3,27 +3,15 @@ use list::ListAccount;
 use sanctum_u64_ratio::{Floor, Ratio};
 
 use crate::{
-    DepositSolQuote, DepositStakeQuote, Fee, FeeCents, LiqPool, MarinadeError,
-    StakeAccountLamports, StakeRecord, StakeSystem, ValidatorRecord, ValidatorSystem,
-    WithdrawStakeQuote,
+    DepositSolQuote, DepositSolQuoteArgs, DepositStakeQuote, DepositStakeQuoteArgs, Fee, FeeCents,
+    LiqPool, MarinadeError, StakeAccountLamports, StakeRecord, StakeSystem, ValidatorRecord,
+    ValidatorSystem, WithdrawStakeQuote, WithdrawStakeQuoteArgs,
 };
 
 pub mod list;
 
 pub type ValidatorList<'a> = ListAccount<'a, ValidatorRecord>;
 pub type StakeList<'a> = ListAccount<'a, StakeRecord>;
-
-#[derive(Clone, Copy, Debug)]
-pub struct DepositSolQuoteParams {
-    pub msol_leg_balance: u64,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct DepositStakeQuoteParams<'a> {
-    pub msol_leg_balance: u64,
-    pub validator_list: ValidatorList<'a>,
-    pub validator_index: u32,
-}
 
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -201,7 +189,7 @@ impl State {
     pub fn quote_deposit_sol(
         &self,
         lamports: u64,
-        params: DepositSolQuoteParams,
+        args: DepositSolQuoteArgs,
     ) -> Result<DepositSolQuote, MarinadeError> {
         if self.paused {
             return Err(MarinadeError::ProgramIsPaused);
@@ -211,7 +199,7 @@ impl State {
             return Err(MarinadeError::DepositAmountIsTooLow);
         }
 
-        if self.will_deposit_exceed_staking_cap(lamports, params.msol_leg_balance)? {
+        if self.will_deposit_exceed_staking_cap(lamports, args.msol_leg_balance)? {
             return Err(MarinadeError::StakingIsCapped);
         }
 
@@ -245,7 +233,7 @@ impl State {
     pub fn quote_deposit_stake(
         &self,
         stake_account_lamports: StakeAccountLamports,
-        params: DepositStakeQuoteParams,
+        args: DepositStakeQuoteArgs,
     ) -> Result<DepositStakeQuote, MarinadeError> {
         if self.paused {
             return Err(MarinadeError::ProgramIsPaused);
@@ -255,19 +243,15 @@ impl State {
             return Err(MarinadeError::TooLowDelegationInDepositingStake);
         }
 
-        if self.will_deposit_exceed_staking_cap(
-            stake_account_lamports.staked,
-            params.msol_leg_balance,
-        )? {
+        if self
+            .will_deposit_exceed_staking_cap(stake_account_lamports.staked, args.msol_leg_balance)?
+        {
             return Err(MarinadeError::StakingIsCapped);
         }
 
-        // TODO: Not sure if this check is really needed. We're only checking if the validator_index passed is within the length of the validator_list.
-        // We're not checking if the `validator_record.validator_account == voter_pubkey`. We would need to pass the voter_pubkey. Do we want to do that?
-        match params.validator_list.get(params.validator_index as usize) {
-            Some(validator_record) => validator_record,
-            None => return Err(MarinadeError::WrongValidatorAccountOrIndex),
-        };
+        if *args.validator_record.validator_account() != args.voter_pubkey {
+            return Err(MarinadeError::WrongValidatorAccountOrIndex);
+        }
 
         match self.quote_deposit_stake_unchecked(stake_account_lamports) {
             Some(quote) => Ok(quote),
@@ -276,7 +260,7 @@ impl State {
     }
 
     #[inline]
-    pub fn quote_withdraw_stake(&self, pool_tokens: u64) -> Option<WithdrawStakeQuote> {
+    pub fn quote_withdraw_stake_unchecked(&self, pool_tokens: u64) -> Option<WithdrawStakeQuote> {
         let total_lamports = self.pool_tokens_to_lamports(pool_tokens)?;
 
         // https://github.com/marinade-finance/liquid-staking-program/blob/main/programs/marinade-finance/src/instructions/user/withdraw_stake_account.rs#L176
@@ -292,6 +276,49 @@ impl State {
             lamports_staked: split_lamports,
             fee_amount: msol_fees,
         })
+    }
+
+    #[inline]
+    pub fn quote_withdraw_stake(
+        &self,
+        pool_tokens: u64,
+        args: WithdrawStakeQuoteArgs,
+    ) -> Result<WithdrawStakeQuote, MarinadeError> {
+        if self.paused {
+            return Err(MarinadeError::ProgramIsPaused);
+        }
+
+        if !self.withdraw_stake_account_enabled {
+            return Err(MarinadeError::WithdrawStakeAccountIsNotEnabled);
+        }
+
+        if args.stake_record.is_emergency_unstaking() {
+            return Err(MarinadeError::StakeAccountIsEmergencyUnstaking);
+        }
+
+        let quote = match self.quote_withdraw_stake_unchecked(pool_tokens) {
+            Some(quote) => quote,
+            None => return Err(MarinadeError::CalculationFailure),
+        };
+
+        if quote.lamports_staked < self.stake_system.min_stake {
+            return Err(MarinadeError::WithdrawStakeLamportsIsTooLow);
+        }
+
+        if args.stake_record.last_update_delegated_lamports() < quote.lamports_staked {
+            return Err(MarinadeError::SelectedStakeAccountHasNotEnoughFunds);
+        }
+
+        let remainder_stake = args
+            .stake_record
+            .last_update_delegated_lamports()
+            .saturating_sub(quote.lamports_staked);
+
+        if remainder_stake < self.stake_system.min_stake {
+            return Err(MarinadeError::StakeAccountRemainderTooLow);
+        }
+
+        Ok(quote)
     }
 }
 
