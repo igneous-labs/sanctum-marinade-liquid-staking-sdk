@@ -1,6 +1,6 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
-use crate::{StakeRecord, ValidatorRecord};
+use crate::StakeRecord;
 
 #[derive(Clone, Copy, Debug)]
 pub struct DepositSolQuoteArgs {
@@ -23,8 +23,6 @@ pub struct DepositSolQuote {
 #[derive(Clone, Copy, Debug)]
 pub struct DepositStakeQuoteArgs {
     pub msol_leg_balance: u64,
-    pub validator_record: ValidatorRecord,
-    pub voter_pubkey: [u8; 32],
 }
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]

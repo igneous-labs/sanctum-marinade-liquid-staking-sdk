@@ -4,7 +4,6 @@ pub enum MarinadeError {
     StakingIsCapped,
     CalculationFailure,
     TooLowDelegationInDepositingStake,
-    WrongValidatorAccountOrIndex,
     WithdrawStakeAccountIsNotEnabled,
     StakeAccountIsEmergencyUnstaking,
     WithdrawStakeLamportsIsTooLow,

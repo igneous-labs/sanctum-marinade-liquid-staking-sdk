@@ -139,20 +139,17 @@ impl State {
         lamports: u64,
         msol_leg_balance: u64,
     ) -> Result<bool, MarinadeError> {
-        let msol_buy_order = match self.lamports_to_pool_tokens(lamports) {
-            Some(msol_buy_order) => msol_buy_order,
-            None => return Err(MarinadeError::CalculationFailure),
-        };
+        let msol_buy_order = self
+            .lamports_to_pool_tokens(lamports)
+            .ok_or(MarinadeError::CalculationFailure)?;
 
         let msol_swapped = msol_buy_order.min(msol_leg_balance);
         let sol_swapped = if msol_swapped > 0 {
             if msol_buy_order == msol_swapped {
                 lamports
             } else {
-                match self.pool_tokens_to_lamports(msol_swapped) {
-                    Some(sol_swapped) => sol_swapped,
-                    None => return Err(MarinadeError::CalculationFailure),
-                }
+                self.pool_tokens_to_lamports(msol_swapped)
+                    .ok_or(MarinadeError::CalculationFailure)?
             }
         } else {
             0
@@ -245,11 +242,6 @@ impl State {
             .will_deposit_exceed_staking_cap(stake_account_lamports.staked, args.msol_leg_balance)?
         {
             return Err(MarinadeError::StakingIsCapped);
-        }
-
-        // TODO: I feel like this check is kinda useless, because if the caller already found the validator record then why verify it against another voter_pubkey?
-        if *args.validator_record.validator_account() != args.voter_pubkey {
-            return Err(MarinadeError::WrongValidatorAccountOrIndex);
         }
 
         self.quote_deposit_stake_unchecked(stake_account_lamports)
