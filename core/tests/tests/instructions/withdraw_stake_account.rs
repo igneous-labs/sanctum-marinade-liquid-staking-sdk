@@ -25,7 +25,9 @@ fn withdraw_stake_account_ix() {
     let stake_index = 10;
 
     let pool_tokens_to_withdraw = 2_000_000_000;
-    let quote = state.quote_withdraw_stake(pool_tokens_to_withdraw).unwrap();
+    let quote = state
+        .quote_withdraw_stake_unchecked(pool_tokens_to_withdraw)
+        .unwrap();
 
     let user = Pubkey::new_unique();
     let burn_msol_from = Pubkey::new_unique();

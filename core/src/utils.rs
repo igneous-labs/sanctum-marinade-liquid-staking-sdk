@@ -1,5 +1,12 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 
+use crate::StakeRecord;
+
+#[derive(Clone, Copy, Debug)]
+pub struct DepositSolQuoteArgs {
+    pub msol_leg_balance: u64,
+}
+
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
 #[cfg_attr(
     feature = "serde",
@@ -11,6 +18,11 @@ pub struct DepositSolQuote {
     pub in_amount: u64,
     /// Output mSOL amount in lamports (Marinade does not charge fees on deposits)
     pub out_amount: u64,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct DepositStakeQuoteArgs {
+    pub msol_leg_balance: u64,
 }
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]
@@ -42,6 +54,11 @@ impl StakeAccountLamports {
     pub fn total(&self) -> u64 {
         self.staked + self.unstaked
     }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct WithdrawStakeQuoteArgs {
+    pub stake_record: StakeRecord,
 }
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq)]

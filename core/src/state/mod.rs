@@ -3,8 +3,9 @@ use list::ListAccount;
 use sanctum_u64_ratio::{Floor, Ratio};
 
 use crate::{
-    DepositSolQuote, DepositStakeQuote, Fee, FeeCents, LiqPool, StakeAccountLamports, StakeRecord,
-    StakeSystem, ValidatorRecord, ValidatorSystem, WithdrawStakeQuote,
+    DepositSolQuote, DepositSolQuoteArgs, DepositStakeQuote, DepositStakeQuoteArgs, Fee, FeeCents,
+    LiqPool, MarinadeError, StakeAccountLamports, StakeRecord, StakeSystem, ValidatorRecord,
+    ValidatorSystem, WithdrawStakeQuote, WithdrawStakeQuoteArgs,
 };
 
 pub mod list;
@@ -123,7 +124,52 @@ impl State {
     };
 
     #[inline]
-    pub fn quote_deposit_sol(&self, lamports: u64) -> Option<DepositSolQuote> {
+    pub fn is_sol_deposit_too_low(&self, lamports: u64) -> bool {
+        lamports < self.min_deposit
+    }
+
+    #[inline]
+    pub fn is_stake_deposit_too_low(&self, stake_lamports: u64) -> bool {
+        stake_lamports < self.stake_system.min_stake
+    }
+
+    #[inline]
+    pub fn will_deposit_exceed_staking_cap(
+        &self,
+        lamports: u64,
+        msol_leg_balance: u64,
+    ) -> Result<bool, MarinadeError> {
+        let msol_buy_order = self
+            .lamports_to_pool_tokens(lamports)
+            .ok_or(MarinadeError::CalculationFailure)?;
+
+        let msol_swapped = msol_buy_order.min(msol_leg_balance);
+        let sol_swapped = if msol_swapped > 0 {
+            if msol_buy_order == msol_swapped {
+                lamports
+            } else {
+                self.pool_tokens_to_lamports(msol_swapped)
+                    .ok_or(MarinadeError::CalculationFailure)?
+            }
+        } else {
+            0
+        };
+
+        let sol_deposited = lamports.saturating_sub(sol_swapped);
+        if sol_deposited == 0 {
+            return Ok(false);
+        }
+
+        // https://github.com/marinade-finance/liquid-staking-program/blob/main/programs/marinade-finance/src/state/mod.rs#L196
+        let result_amount = self
+            .total_lamports_under_control()
+            .saturating_add(sol_deposited);
+
+        Ok(result_amount > self.staking_sol_cap)
+    }
+
+    #[inline]
+    pub fn quote_deposit_sol_unchecked(&self, lamports: u64) -> Option<DepositSolQuote> {
         let out_amount = if self.msol_supply == 0 {
             lamports
         } else {
@@ -137,7 +183,29 @@ impl State {
     }
 
     #[inline]
-    pub fn quote_deposit_stake(
+    pub fn quote_deposit_sol(
+        &self,
+        lamports: u64,
+        args: DepositSolQuoteArgs,
+    ) -> Result<DepositSolQuote, MarinadeError> {
+        if self.paused {
+            return Err(MarinadeError::ProgramIsPaused);
+        }
+
+        if self.is_sol_deposit_too_low(lamports) {
+            return Err(MarinadeError::DepositAmountIsTooLow);
+        }
+
+        if self.will_deposit_exceed_staking_cap(lamports, args.msol_leg_balance)? {
+            return Err(MarinadeError::StakingIsCapped);
+        }
+
+        self.quote_deposit_sol_unchecked(lamports)
+            .ok_or(MarinadeError::CalculationFailure)
+    }
+
+    #[inline]
+    pub fn quote_deposit_stake_unchecked(
         &self,
         stake_account_lamports: StakeAccountLamports,
     ) -> Option<DepositStakeQuote> {
@@ -157,7 +225,31 @@ impl State {
     }
 
     #[inline]
-    pub fn quote_withdraw_stake(&self, pool_tokens: u64) -> Option<WithdrawStakeQuote> {
+    pub fn quote_deposit_stake(
+        &self,
+        stake_account_lamports: StakeAccountLamports,
+        args: DepositStakeQuoteArgs,
+    ) -> Result<DepositStakeQuote, MarinadeError> {
+        if self.paused {
+            return Err(MarinadeError::ProgramIsPaused);
+        }
+
+        if self.is_stake_deposit_too_low(stake_account_lamports.staked) {
+            return Err(MarinadeError::TooLowDelegationInDepositingStake);
+        }
+
+        if self
+            .will_deposit_exceed_staking_cap(stake_account_lamports.staked, args.msol_leg_balance)?
+        {
+            return Err(MarinadeError::StakingIsCapped);
+        }
+
+        self.quote_deposit_stake_unchecked(stake_account_lamports)
+            .ok_or(MarinadeError::CalculationFailure)
+    }
+
+    #[inline]
+    pub fn quote_withdraw_stake_unchecked(&self, pool_tokens: u64) -> Option<WithdrawStakeQuote> {
         let total_lamports = self.pool_tokens_to_lamports(pool_tokens)?;
 
         // https://github.com/marinade-finance/liquid-staking-program/blob/main/programs/marinade-finance/src/instructions/user/withdraw_stake_account.rs#L176
@@ -173,6 +265,48 @@ impl State {
             lamports_staked: split_lamports,
             fee_amount: msol_fees,
         })
+    }
+
+    #[inline]
+    pub fn quote_withdraw_stake(
+        &self,
+        pool_tokens: u64,
+        args: WithdrawStakeQuoteArgs,
+    ) -> Result<WithdrawStakeQuote, MarinadeError> {
+        if self.paused {
+            return Err(MarinadeError::ProgramIsPaused);
+        }
+
+        if !self.withdraw_stake_account_enabled {
+            return Err(MarinadeError::WithdrawStakeAccountIsNotEnabled);
+        }
+
+        if args.stake_record.is_emergency_unstaking() {
+            return Err(MarinadeError::StakeAccountIsEmergencyUnstaking);
+        }
+
+        let quote = self
+            .quote_withdraw_stake_unchecked(pool_tokens)
+            .ok_or(MarinadeError::CalculationFailure)?;
+
+        if quote.lamports_staked < self.stake_system.min_stake {
+            return Err(MarinadeError::WithdrawStakeLamportsIsTooLow);
+        }
+
+        if args.stake_record.last_update_delegated_lamports() < quote.lamports_staked {
+            return Err(MarinadeError::SelectedStakeAccountHasNotEnoughFunds);
+        }
+
+        let remainder_stake = args
+            .stake_record
+            .last_update_delegated_lamports()
+            .saturating_sub(quote.lamports_staked);
+
+        if remainder_stake < self.stake_system.min_stake {
+            return Err(MarinadeError::StakeAccountRemainderTooLow);
+        }
+
+        Ok(quote)
     }
 }
 

@@ -18,7 +18,7 @@ fn deposit_ix() {
         marinade_staking_sdk::State::borsh_de(state_account.account_data().as_slice()).unwrap();
 
     let deposit_amount: u64 = 1_000;
-    let quote = state.quote_deposit_sol(deposit_amount).unwrap();
+    let quote = state.quote_deposit_sol_unchecked(deposit_amount).unwrap();
 
     let transfer_from = Pubkey::new_unique();
     let mint_to = Pubkey::new_unique();
