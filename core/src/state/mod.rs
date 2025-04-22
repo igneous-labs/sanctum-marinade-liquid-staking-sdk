@@ -203,10 +203,8 @@ impl State {
             return Err(MarinadeError::StakingIsCapped);
         }
 
-        match self.quote_deposit_sol_unchecked(lamports) {
-            Some(quote) => Ok(quote),
-            None => Err(MarinadeError::CalculationFailure),
-        }
+        self.quote_deposit_sol_unchecked(lamports)
+            .ok_or(MarinadeError::CalculationFailure)
     }
 
     #[inline]
@@ -254,10 +252,8 @@ impl State {
             return Err(MarinadeError::WrongValidatorAccountOrIndex);
         }
 
-        match self.quote_deposit_stake_unchecked(stake_account_lamports) {
-            Some(quote) => Ok(quote),
-            None => Err(MarinadeError::CalculationFailure),
-        }
+        self.quote_deposit_stake_unchecked(stake_account_lamports)
+            .ok_or(MarinadeError::CalculationFailure)
     }
 
     #[inline]
@@ -297,10 +293,9 @@ impl State {
             return Err(MarinadeError::StakeAccountIsEmergencyUnstaking);
         }
 
-        let quote = match self.quote_withdraw_stake_unchecked(pool_tokens) {
-            Some(quote) => quote,
-            None => return Err(MarinadeError::CalculationFailure),
-        };
+        let quote = self
+            .quote_withdraw_stake_unchecked(pool_tokens)
+            .ok_or(MarinadeError::CalculationFailure)?;
 
         if quote.lamports_staked < self.stake_system.min_stake {
             return Err(MarinadeError::WithdrawStakeLamportsIsTooLow);
