@@ -249,6 +249,7 @@ impl State {
             return Err(MarinadeError::StakingIsCapped);
         }
 
+        // TODO: I feel like this check is kinda useless, because if the caller already found the validator record then why verify it against another voter_pubkey?
         if *args.validator_record.validator_account() != args.voter_pubkey {
             return Err(MarinadeError::WrongValidatorAccountOrIndex);
         }
