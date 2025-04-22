@@ -39,7 +39,7 @@ fn deposit_stake_account_ix() {
     let duplication_flag_pubkey = Pubkey::new_unique();
 
     let quote = state
-        .quote_deposit_stake(StakeAccountLamports {
+        .quote_deposit_stake_unchecked(StakeAccountLamports {
             staked: stake_state.delegation().unwrap().stake,
             unstaked: stake_account
                 .account

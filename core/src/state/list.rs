@@ -2,6 +2,7 @@
 ///
 /// Type T must have an alignment of 1 (typically ensured by using #[repr(C)] and
 /// containing only types that are byte arrays or have alignment 1)
+#[derive(Clone, Copy, Debug)]
 pub struct ListAccount<'a, T>(pub &'a [T]);
 
 impl<'a, T> ListAccount<'a, T> {
@@ -60,5 +61,13 @@ impl<'a, T> ListAccount<'a, T> {
     /// Get a reference to the underlying slice
     pub fn as_slice(&self) -> &'a [T] {
         self.0
+    }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        if self.0.len() <= index {
+            return None;
+        }
+
+        Some(&self.0[index])
     }
 }

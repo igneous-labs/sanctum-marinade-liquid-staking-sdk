@@ -13,8 +13,16 @@ pub mod list;
 pub type ValidatorList<'a> = ListAccount<'a, ValidatorRecord>;
 pub type StakeList<'a> = ListAccount<'a, StakeRecord>;
 
+#[derive(Clone, Copy, Debug)]
 pub struct DepositSolQuoteParams {
-    msol_leg_balance: u64,
+    pub msol_leg_balance: u64,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct DepositStakeQuoteParams<'a> {
+    pub msol_leg_balance: u64,
+    pub validator_list: ValidatorList<'a>,
+    pub validator_index: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize)]
@@ -128,19 +136,24 @@ impl State {
     };
 
     #[inline]
-    pub fn check_min_deposit(&self, lamports: u64) -> bool {
-        lamports >= self.min_deposit
+    pub fn is_sol_deposit_too_low(&self, lamports: u64) -> bool {
+        lamports < self.min_deposit
     }
 
     #[inline]
-    pub fn check_staking_cap(
+    pub fn is_stake_deposit_too_low(&self, stake_lamports: u64) -> bool {
+        stake_lamports < self.stake_system.min_stake
+    }
+
+    #[inline]
+    pub fn will_deposit_exceed_staking_cap(
         &self,
         lamports: u64,
         msol_leg_balance: u64,
     ) -> Result<bool, MarinadeError> {
         let msol_buy_order = match self.lamports_to_pool_tokens(lamports) {
             Some(msol_buy_order) => msol_buy_order,
-            None => return Err(MarinadeError::CalculationError),
+            None => return Err(MarinadeError::CalculationFailure),
         };
 
         let msol_swapped = msol_buy_order.min(msol_leg_balance);
@@ -150,7 +163,7 @@ impl State {
             } else {
                 match self.pool_tokens_to_lamports(msol_swapped) {
                     Some(sol_swapped) => sol_swapped,
-                    None => return Err(MarinadeError::CalculationError),
+                    None => return Err(MarinadeError::CalculationFailure),
                 }
             }
         } else {
@@ -159,7 +172,7 @@ impl State {
 
         let sol_deposited = lamports.saturating_sub(sol_swapped);
         if sol_deposited == 0 {
-            return Ok(true);
+            return Ok(false);
         }
 
         // https://github.com/marinade-finance/liquid-staking-program/blob/main/programs/marinade-finance/src/state/mod.rs#L196
@@ -167,32 +180,7 @@ impl State {
             .total_lamports_under_control()
             .saturating_add(sol_deposited);
 
-        Ok(result_amount <= self.staking_sol_cap)
-    }
-
-    #[inline]
-    pub fn quote_deposit_sol(
-        &self,
-        lamports: u64,
-        params: &DepositSolQuoteParams,
-    ) -> Result<DepositSolQuote, MarinadeError> {
-        if self.paused {
-            return Err(MarinadeError::ProgramIsPaused);
-        }
-
-        if !self.check_min_deposit(lamports) {
-            return Err(MarinadeError::DepositAmountIsTooLow);
-        }
-
-        if !self.check_staking_cap(lamports, params.msol_leg_balance)? {
-            return Err(MarinadeError::StakingIsCapped);
-        }
-
-        match self.quote_deposit_sol_unchecked(lamports) {
-            Some(quote) => Ok(quote),
-            // Since the only time we get `None` is when `.apply` returns `None`,
-            None => Err(MarinadeError::CalculationError),
-        }
+        Ok(result_amount > self.staking_sol_cap)
     }
 
     #[inline]
@@ -210,7 +198,31 @@ impl State {
     }
 
     #[inline]
-    pub fn quote_deposit_stake(
+    pub fn quote_deposit_sol(
+        &self,
+        lamports: u64,
+        params: DepositSolQuoteParams,
+    ) -> Result<DepositSolQuote, MarinadeError> {
+        if self.paused {
+            return Err(MarinadeError::ProgramIsPaused);
+        }
+
+        if self.is_sol_deposit_too_low(lamports) {
+            return Err(MarinadeError::DepositAmountIsTooLow);
+        }
+
+        if self.will_deposit_exceed_staking_cap(lamports, params.msol_leg_balance)? {
+            return Err(MarinadeError::StakingIsCapped);
+        }
+
+        match self.quote_deposit_sol_unchecked(lamports) {
+            Some(quote) => Ok(quote),
+            None => Err(MarinadeError::CalculationFailure),
+        }
+    }
+
+    #[inline]
+    pub fn quote_deposit_stake_unchecked(
         &self,
         stake_account_lamports: StakeAccountLamports,
     ) -> Option<DepositStakeQuote> {
@@ -227,6 +239,40 @@ impl State {
             // TODO: confirm it's _from_stake and not just total
             tokens_out: new_pool_tokens_from_stake,
         })
+    }
+
+    #[inline]
+    pub fn quote_deposit_stake(
+        &self,
+        stake_account_lamports: StakeAccountLamports,
+        params: DepositStakeQuoteParams,
+    ) -> Result<DepositStakeQuote, MarinadeError> {
+        if self.paused {
+            return Err(MarinadeError::ProgramIsPaused);
+        }
+
+        if self.is_stake_deposit_too_low(stake_account_lamports.staked) {
+            return Err(MarinadeError::TooLowDelegationInDepositingStake);
+        }
+
+        if self.will_deposit_exceed_staking_cap(
+            stake_account_lamports.staked,
+            params.msol_leg_balance,
+        )? {
+            return Err(MarinadeError::StakingIsCapped);
+        }
+
+        // TODO: Not sure if this check is really needed. We're only checking if the validator_index passed is within the length of the validator_list.
+        // We're not checking if the `validator_record.validator_account == voter_pubkey`. We would need to pass the voter_pubkey. Do we want to do that?
+        match params.validator_list.get(params.validator_index as usize) {
+            Some(validator_record) => validator_record,
+            None => return Err(MarinadeError::WrongValidatorAccountOrIndex),
+        };
+
+        match self.quote_deposit_stake_unchecked(stake_account_lamports) {
+            Some(quote) => Ok(quote),
+            None => Err(MarinadeError::CalculationFailure),
+        }
     }
 
     #[inline]
