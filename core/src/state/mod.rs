@@ -190,6 +190,7 @@ impl State {
 
         match self.quote_deposit_sol_unchecked(lamports) {
             Some(quote) => Ok(quote),
+            // Since the only time we get `None` is when `.apply` returns `None`,
             None => Err(MarinadeError::CalculationError),
         }
     }
