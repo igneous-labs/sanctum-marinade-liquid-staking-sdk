@@ -27,6 +27,7 @@ impl ValidatorSystem {
 }
 
 #[derive(Debug, Clone, Copy, BorshSerialize, BorshDeserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[repr(C)]
 pub struct ValidatorRecord {
     validator_account: [u8; 32],
