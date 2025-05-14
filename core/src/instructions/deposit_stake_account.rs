@@ -7,7 +7,7 @@ use crate::{
 
 pub const INSTRUCTION_DISCRIM_DEPOSIT_STAKE_ACCOUNT: [u8; 8] = [110, 130, 115, 41, 164, 102, 2, 59];
 
-#[generic_array_struct(pub)]
+#[generic_array_struct(builder pub)]
 #[repr(transparent)]
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
