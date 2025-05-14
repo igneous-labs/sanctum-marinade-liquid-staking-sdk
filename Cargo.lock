@@ -976,11 +976,12 @@ dependencies = [
 
 [[package]]
 name = "generic-array-struct"
-version = "0.2.0"
+version = "0.3.1-bc"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ba61285dacb37bba74d5b9e633fdecc43b84a2f102dac81286a383c0cd0c8f5"
+checksum = "165d494bef8e3d381c01c3ebae903c71757c4e2241201a7139cb79bcf161cec9"
 dependencies = [
  "heck",
+ "proc-macro2",
  "quote",
  "syn 2.0.100",
 ]
