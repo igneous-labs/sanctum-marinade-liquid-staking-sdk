@@ -253,8 +253,10 @@ impl State {
         let total_lamports = self.pool_tokens_to_lamports(pool_tokens)?;
 
         // https://github.com/marinade-finance/liquid-staking-program/blob/main/programs/marinade-finance/src/instructions/user/withdraw_stake_account.rs#L176
-        let withdraw_stake_account_fee_lamports =
-            self.withdraw_stake_account_fee.apply(total_lamports)?;
+        let withdraw_stake_account_fee_lamports = self
+            .withdraw_stake_account_fee
+            .to_fee_floor()?
+            .apply(total_lamports)?;
 
         let split_lamports = withdraw_stake_account_fee_lamports.rem();
 
