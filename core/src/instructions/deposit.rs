@@ -94,7 +94,8 @@ impl<'a> DepositIxKeys<'a> {
 
     #[inline]
     pub const fn with_consts(self) -> Self {
-        // TODO: in spl-sdk, we don't do `const_with_token_program`, why??
+        // we can hardcode TOKEN_PROGRAM here in contrast to spl
+        // because msol is guaranteed to be under token program, not token-22
         self.const_with_system_program(&SYSTEM_PROGRAM)
             .const_with_token_program(&TOKEN_PROGRAM)
     }
