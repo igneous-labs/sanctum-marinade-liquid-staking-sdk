@@ -12,6 +12,7 @@ pub enum MarinadeError {
     WithdrawStakeLamportsIsTooLow,
     SelectedStakeAccountHasNotEnoughFunds,
     StakeAccountRemainderTooLow,
+    WrongValidatorAccountOrIndex,
 }
 
 impl Display for MarinadeError {

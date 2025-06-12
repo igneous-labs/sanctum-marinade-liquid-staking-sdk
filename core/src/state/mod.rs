@@ -224,6 +224,8 @@ impl State {
         })
     }
 
+    /// For a successful stake deposit, the user must further ensure that the stake account
+    /// to be deposited is active and delegated to a validator on the [`ValidatorList`]
     #[inline]
     pub fn quote_deposit_stake(
         &self,
